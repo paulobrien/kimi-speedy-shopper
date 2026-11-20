@@ -1,0 +1,67 @@
+// OpenClaw config for the Kimi K3.1 Pro x Cerebras hackathon entry.
+// Installed to ~/.openclaw/openclaw.json by scripts/setup-openclaw.sh, which fills in __REPO__.
+// Secrets are never stored here: they come from ~/.openclaw/.env
+// (CEREBRAS_API_KEY, THERMITE_MCP_TOKEN, OPENCLAW_GATEWAY_TOKEN).
+{
+  gateway: {
+    mode: "local",
+    bind: "loopback",
+    port: 18789,
+    auth: { token: "${OPENCLAW_GATEWAY_TOKEN}" },
+  },
+  agents: {
+    defaults: {
+      model: { primary: "cerebras/moonshotai-kimi-k3.1-pro-trial" },
+    },
+    entries: {
+      // Lean agent for the demo: Thermite MCP tools only, no skills or bootstrap files,
+      // so each request stays small under Cerebras tokens-per-minute limits.
+      mission: {
+        name: "Mission control",
+        workspace: "__REPO__/agent",
+        model: "cerebras/moonshotai-kimi-k3.1-pro-trial",
+        skills: [],
+        tools: { allow: ["bundle-mcp"], codeMode: false, swarm: false },
+      },
+    },
+  },
+  tools: { toolSearch: false },
+  models: {
+    mode: "merge",
+    providers: {
+      cerebras: {
+        baseUrl: "https://api.cerebras.ai/v1",
+        apiKey: "${CEREBRAS_API_KEY}",
+        api: "openai-completions",
+        models: [
+          {
+            id: "moonshotai-kimi-k3.1-pro-trial",
+            name: "Kimi K3.1 Pro (Cerebras trial)",
+            input: ["text", "image"],
+            reasoning: true,
+          },
+          // Stand-in for pipeline tests until Kimi preview access is live.
+          { id: "gpt-oss-120b", name: "gpt-oss-120b (Cerebras)", input: ["text"], reasoning: true },
+        ],
+      },
+    },
+  },
+  mcp: {
+    servers: {
+      thermite: {
+        url: "http://127.0.0.1:8800/mcp",
+        transport: "streamable-http",
+        headers: { Authorization: "Bearer ${THERMITE_MCP_TOKEN}" },
+        // All 68 tool schemas are ~33K tokens a turn (100K TPM cap), and the operator
+        // token can start paid RunPod pods: expose only what mission control needs.
+        toolFilter: {
+          include: [
+            "list_rigs", "get_run", "get_attempt", "run_queue", "recent_events",
+            "leaderboard", "model_usage", "list_commands", "command_status",
+            "issue_command", "start_run", "kits",
+          ],
+        },
+      },
+    },
+  },
+}
