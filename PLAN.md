@@ -11,7 +11,7 @@ Build window: **Sat 21 Nov 10:00 PT → Sun 22 Nov 10:00 PT** (18:00 → 18:00 G
 | Speed Bounty task | The `shopper` agent finds **five Christmas gifts on real retail sites**, each with its product link |
 | No made-up or hard-coded results | Links come only from live search during the run; `scripts/verify_gifts.py` re-fetches each link and checks it's a live product page; the judge rejects any link that also appears in the agent's own files |
 | Bounty TPS | Measured with the official patch (separate patched build, never in the public demo). Our own proxy reproduces its formula exactly for development |
-| ≤60 s video, Cerebras speed, GPU side-by-side | Shopper run on Cerebras vs the same agent on a GPU provider, plus verified links on screen |
+| ≤60 s video, Cerebras speed, GPU side-by-side | `shopper` (Kimi K3.1 Pro on Cerebras) vs `shopper-gpu` (the same model and agent via OpenRouter's fastest GPU provider, never Cerebras), plus verified links on screen |
 
 ## How TPS is scored (from the official patch)
 
@@ -30,6 +30,12 @@ What we measured on our key (Sat 18:40 GMT): per-call TPS is noisy (≈270–470
 5. **Thermite hill climb** (`kit/`). A Thermite kit whose candidate is the shopper configuration (`shopper/AGENTS.md`, `shopper/settings.json`). The judge runs the bench several times with varied gift briefs. Score = median mean-TPS, gated on validity: 5 distinct live product links, all present in that run's tool results, none present in the candidate's files. Thermite's workers stay on the rig's current models; Kimi is central through OpenClaw.
 6. **Mission control** (existing `mission` agent). OpenClaw on Kimi, steering the Thermite campaign through its MCP tools ("how's the speed run going?", "queue another lane"). This is the "guide" half of the demo.
 
+## Status (Sat 19:30 GMT)
+
+- Shopper, proxy, verifier, bench, kit and contract all work. Campaign run `speedy-shopper-2` is measuring its baseline (judged runs so far: 424, 382, 514 mean TPS, all valid).
+- Cerebras is heavily congested (queue times up to ~2.5 min per call; 429 `queue_exceeded`). The proxies retry; it doesn't affect TPS, only throughput.
+- Run 1 and the judge-only try are paused (kit fixes).
+
 ## Timeline
 
 - **Sat evening (GMT):** parts 1–4 working on standard OpenClaw; first valid shopper runs with TPS numbers. Plan, README and commits.
@@ -47,5 +53,5 @@ What we measured on our key (Sat 18:40 GMT): per-call TPS is noisy (≈270–470
 
 - OK to download and build the speed patch (separate checkout, outside this repo).
 - Adding Cerebras as a Thermite provider (dashboard sign-in) if we want Thermite's workers on Kimi too. Optional.
-- Choosing the GPU provider for the side-by-side.
+- An OpenRouter API key (`OPENROUTER_API_KEY` in `~/.openclaw/.env`) for the `shopper-gpu` side-by-side.
 - Handles for the posts; creating the public GitHub repo.
