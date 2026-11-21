@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "campaign": "speedy-shopper",
+  "version": 1,
+  "title": "Santa's Speedy Shopper: raise Kimi K3.1 Pro's mean tokens/sec on a real gift-finding task",
+  "mode": "hill_climb",
+  "project": {
+    "repo": "speedy-shopper",
+    "kit": {
+      "repo": "speedy-shopper-kit",
+      "commit": "__KIT_COMMIT__"
+    }
+  },
+  "target": {
+    "type": "cpu",
+    "class": "generic-cpu"
+  },
+  "objective": {
+    "primary": {
+      "metric": "mean_tps",
+      "direction": "max",
+      "min_effect": 0.05
+    }
+  },
+  "guards": [],
+  "hard_constraints": [],
+  "cells": [
+    "gifts"
+  ],
+  "held_out_cells": [
+    "held"
+  ],
+  "editable_paths": [
+    "shopper/**"
+  ],
+  "forbidden_patterns": [
+    "https?://",
+    "www\\."
+  ],
+  "acceptance": {
+    "equivalence_band": 0.04,
+    "runs_per_cell": 3,
+    "audit": {
+      "ratio_to_median": 1000,
+      "absolute": 1000
+    }
+  },
+  "additional_information": "The candidate is an OpenClaw agent's instructions (shopper/AGENTS.md) and request settings (shopper/settings.json); read README.md first. The judge sends them to a bench service that runs the agent on Kimi K3.1 Pro on Cerebras with OpenClaw and scores it like the official Speed Bounty patch: the mean over model calls of completion_tokens / completion_time (Cerebras server-side decode timing). A run is valid only if the agent's answer lists five real, live product pages that came from its own search results in that run; URLs written into shopper/ are forbidden. Per-call speed is noisy (about 270-560 tok/s on identical requests, from shared serving load), hence 3 runs per cell and a 5% minimum effect. Ideas worth testing: how much the agent writes per call (short tool-call turns vs long answers), number of model calls (one search call vs several), reasoning effort (low/high/max) and how much it reasons, sampling settings, and output style (predictable, structured text may decode faster with speculative decoding). Every judged run costs real API tokens under a 100K tokens/minute limit, and the judge takes minutes per run.",
+  "budget": {
+    "wall_hours": 14,
+    "max_open_attempts": 2
+  }
+}
