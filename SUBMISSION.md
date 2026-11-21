@@ -29,7 +29,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the handles, number
 >
 > It runs on Kimi K3.1 Pro on Cerebras inside OpenClaw, an open-source agent harness. Every link is checked by a verifier that opens the page and confirms it's a live product, so there are no made-up gifts.
 >
-> Then I let an autoresearch loop loose on it overnight. Thermite, an open-source tool I build, had its agents rewrite the shopper's instructions and settings, while a judge they can't touch re-ran the shopper on random gift requests. It kept a change only if the gifts were still real *and* the model decoded faster. Result: <seed> → <champion> tokens/sec.
+> Then I let an autoresearch loop loose on it overnight. Thermite, an open-source autoresearch tool, had its agents rewrite the shopper's instructions and settings, while a judge they can't touch re-ran the shopper on random gift requests. It kept a change only if the gifts were still real *and* the model decoded faster. Result: <seed> → <champion> tokens/sec.
 >
 > Three things I learned:
 > - Same model, different hardware: Kimi K3.1 Pro decoded ~<N>× faster on Cerebras than on Moonshot AI's own API.
