@@ -46,7 +46,8 @@ def main() -> int:
     p.add_argument("--model", default=os.environ.get("CEREBRAS_MODEL", DEFAULT_MODEL))
     p.add_argument("--prompt", default=DEFAULT_PROMPT)
     p.add_argument("--max-tokens", type=int, default=512)
-    p.add_argument("--reasoning-effort", choices=["low", "medium", "high"])
+    p.add_argument("--reasoning-effort", choices=["low", "medium", "high", "max"])
+    p.add_argument("--temperature", type=float)
     p.add_argument("--list-models", action="store_true")
     p.add_argument("--quiet", action="store_true", help="don't echo the output text")
     args = p.parse_args()
@@ -73,6 +74,8 @@ def main() -> int:
     }
     if args.reasoning_effort:
         body["reasoning_effort"] = args.reasoning_effort
+    if args.temperature is not None:
+        body["temperature"] = args.temperature
 
     req = urllib.request.Request(
         f"{BASE_URL}/chat/completions", data=json.dumps(body).encode(), headers=headers
