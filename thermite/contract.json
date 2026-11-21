@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "campaign": "speedy-shopper",
-  "version": 1,
+  "version": 2,
   "title": "Santa's Speedy Shopper: raise Kimi K3.1 Pro's mean tokens/sec on a real gift-finding task",
   "mode": "hill_climb",
   "project": {
