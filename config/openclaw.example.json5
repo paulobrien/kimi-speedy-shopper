@@ -15,6 +15,8 @@
       // The web chat opens on the shopper; pick "Mission control" in the agent menu.
       systemAgent: { agentId: "shopper" },
       model: { primary: "cerebras/moonshotai-kimi-k3.1-pro-trial" },
+      // Cerebras queues requests for minutes at peak load; don't give up early.
+      timeoutSeconds: 900,
       // As the official speed-patch config: Kimi on Cerebras at reasoning_effort low.
       thinkingDefault: "low",
     },
@@ -44,7 +46,9 @@
     mode: "merge",
     providers: {
       cerebras: {
-        baseUrl: "https://api.cerebras.ai/v1",
+        // Through scripts/tps_proxy.py --port 8897 (logs each call's decode speed and retries
+        // Cerebras's platform-wide 429 queue_exceeded). Use https://api.cerebras.ai/v1 to go direct.
+        baseUrl: "http://127.0.0.1:8897/v1",
         apiKey: "${CEREBRAS_API_KEY}",
         api: "openai-completions",
         models: [
