@@ -200,12 +200,27 @@ openclaw agent --agent shopper --json --message "Find five Christmas gifts for a
 
 ## Results
 
-_Filled in as the campaign runs._
+_Updated as the campaign runs._
 
-| Configuration | Valid runs | Mean TPS (median of runs) | Calls per run |
+| Configuration | Judged runs | Mean TPS | Notes |
 | --- | --- | --- | --- |
-| Starting point (seed) | | | |
+| Starting point (seed), Thermite baseline | 9 valid of 9 | 382–514, mostly 443–475 | 2 model calls per attempt (search, then answer) |
+| Seed on the patched OpenClaw web chat | 1 | 484 mean, 493 p90 (server) | 5/5 links verified live |
 | Thermite champion | | | |
+
+**Kimi K3.1 Pro decode speed by provider** (Sat 21 Nov, ~20:00 GMT; 600 output tokens at reasoning_effort low, client-side tokens/sec after the first token, one sample each via OpenRouter; Cerebras from our own runs the same evening):
+
+| Provider | tok/s |
+| --- | --- |
+| **Cerebras** (hackathon trial endpoint, under heavy load) | **~300–560, typically ~450** |
+| Amazon Bedrock | 400 |
+| DigitalOcean, Nebius, Parasail | ~300 |
+| InferenceNet, Wafer, PrimaLabs, Modal, Makora, River | 105–140 |
+| DeepInfra, Decart, AkashML, Morph | 60–75 |
+| Together, Alibaba, Fireworks | 42–49 |
+| Moonshot AI (the model's own API) | 35 |
+
+`scripts/race.py` runs the same prompt on Cerebras and on an OpenRouter provider side by side (`--gpu-provider "Moonshot AI"` to pin one). Both clocks start at each side's first token, because time spent queueing is about load, not inference speed. Queue time is still shown, labelled as excluded.
 
 ## Recording and submission
 
