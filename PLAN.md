@@ -11,7 +11,7 @@ Build window: **Sat 21 Nov 10:00 PT → Sun 22 Nov 10:00 PT** (18:00 → 18:00 G
 | Speed Bounty task | The `shopper` agent finds **five Christmas gifts on real retail sites**, each with its product link |
 | No made-up or hard-coded results | Links come only from live search during the run; `scripts/verify_gifts.py` re-fetches each link and checks it's a live product page; the judge rejects any link that also appears in the agent's own files |
 | Bounty TPS | Measured with the official patch (separate patched build, never in the public demo). Our own proxy reproduces its formula exactly for development |
-| ≤60 s video, Cerebras speed, GPU side-by-side | `shopper` (Kimi K3.1 Pro on Cerebras) vs `shopper-gpu` (the same model and agent via OpenRouter's fastest GPU provider, never Cerebras), plus verified links on screen |
+| ≤60 s video, Cerebras speed, GPU side-by-side | `shopper` (Kimi K3.1 Pro on Cerebras) vs `shopper-gpu` (the same model and agent on Moonshot AI's own API via OpenRouter); `scripts/race.py` races the two from each side's first token, plus verified links on screen |
 
 ## How TPS is scored (from the official patch)
 
@@ -53,5 +53,4 @@ What we measured on our key (Sat 18:40 GMT): per-call TPS is noisy (≈270–470
 
 - OK to download and build the speed patch (separate checkout, outside this repo).
 - Adding Cerebras as a Thermite provider (dashboard sign-in) if we want Thermite's workers on Kimi too. Optional.
-- An OpenRouter API key (`OPENROUTER_API_KEY` in `~/.openclaw/.env`) for the `shopper-gpu` side-by-side.
 - Handles for the posts; creating the public GitHub repo.

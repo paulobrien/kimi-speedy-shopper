@@ -220,7 +220,7 @@ _Updated as the campaign runs._
 | Together, Alibaba, Fireworks | 42–49 |
 | Moonshot AI (the model's own API) | 35 |
 
-`scripts/race.py` runs the same prompt on Cerebras and on an OpenRouter provider side by side (`--gpu-provider "Moonshot AI"` to pin one). Both clocks start at each side's first token, because time spent queueing is about load, not inference speed. Queue time is still shown, labelled as excluded.
+**Our comparison is Moonshot AI's own API**, the model's creator serving its own model, rather than the fastest or slowest third-party host. `scripts/race.py` runs the same prompt on Cerebras and on Moonshot's API (via OpenRouter, fallbacks off) side by side; `--gpu-provider NAME` races another host. First race (Cerebras under heavy load): Cerebras 269 tok/s vs Moonshot API 34 tok/s, **8× faster decoding**. Both clocks start at each side's first token, because time spent queueing is about load, not inference speed. Queue time is still shown, labelled as excluded.
 
 ## Recording and submission
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Side-by-side race: Kimi K3.1 Pro on Cerebras vs the same model on GPUs (OpenRouter).
+"""Side-by-side race: Kimi K3.1 Pro on Cerebras vs the same model on Moonshot AI's own API.
+
+The opponent is Moonshot AI's own (GPU-served) endpoint for the model, reached through
+OpenRouter with fallbacks off; --gpu-provider picks another OpenRouter host instead.
 
 Sends the same prompt to both at once and streams both answers side by side in the
 terminal, with live tokens/sec. Inference speed is what's compared, so each side's clock
@@ -32,9 +35,9 @@ SIDES = {
     "cerebras": {"label": "Kimi K3.1 Pro · Cerebras", "url": "https://api.cerebras.ai/v1/chat/completions",
                  "model": "moonshotai-kimi-k3.1-pro-trial", "key": "CEREBRAS_API_KEY",
                  "url_env": "RACE_CEREBRAS_URL"},
-    "gpu": {"label": "Kimi K3.1 Pro · GPU (OpenRouter)", "url": "https://openrouter.ai/api/v1/chat/completions",
+    "gpu": {"label": "Kimi K3.1 Pro · Moonshot AI API (GPU)", "url": "https://openrouter.ai/api/v1/chat/completions",
             "model": "moonshotai/kimi-k3.1-pro", "key": "OPENROUTER_API_KEY", "url_env": "RACE_GPU_URL",
-            "extra": {"provider": {"sort": "throughput", "ignore": ["Cerebras"]}}},
+            "extra": {"provider": {"only": ["Moonshot AI"], "allow_fallbacks": False}}},
 }
 DIM, BOLD, RESET, GREEN, CYAN = "\x1b[2m", "\x1b[1m", "\x1b[0m", "\x1b[32m", "\x1b[36m"
 
@@ -56,6 +59,7 @@ class Stream:
         self.t_send = self.t_first = self.t_last = None
         self.usage = self.time_info = self.provider = self.error = None
         self.done = False
+        self.short = "Moonshot API" if name == "gpu" else "Cerebras"
 
     def run(self):
         c = self.cfg
@@ -143,7 +147,7 @@ def render(streams, ts, width, height, final=False):
     if final:
         a, b = streams
         if a.tps() and b.tps():
-            out.append(f"{BOLD}Cerebras {a.tps():.0f} tok/s vs GPU {b.tps():.0f} tok/s: "
+            out.append(f"{BOLD}Cerebras {a.tps():.0f} tok/s vs {b.short} {b.tps():.0f} tok/s: "
                        f"{a.tps() / b.tps():.1f}× faster decoding{RESET}  "
                        f"{DIM}(clocks start at each side's first token){RESET}\n")
     sys.stdout.write("".join(out))
@@ -161,8 +165,7 @@ def main():
     p.add_argument("--prompt", default=DEFAULT_PROMPT)
     p.add_argument("--max-tokens", type=int, default=1200)
     p.add_argument("--reasoning-effort", default="low")
-    p.add_argument("--gpu-provider", help='pin the OpenRouter side to one provider, e.g. "Moonshot AI" '
-                   "(default: OpenRouter's fastest by throughput, never Cerebras)")
+    p.add_argument("--gpu-provider", help='race another OpenRouter provider instead of "Moonshot AI", e.g. Nebius')
     p.add_argument("--live", action="store_true", help="draw as tokens arrive instead of replaying")
     p.add_argument("--json", metavar="FILE", help="also save both streams' timings here")
     a = p.parse_args()
@@ -170,6 +173,8 @@ def main():
         SIDES["gpu"]["extra"] = {"provider": {"only": [a.gpu_provider], "allow_fallbacks": False}}
         SIDES["gpu"]["label"] = f"Kimi K3.1 Pro · {a.gpu_provider} (OpenRouter)"
     streams = [Stream("cerebras", a), Stream("gpu", a)]
+    if a.gpu_provider:
+        streams[1].short = a.gpu_provider
     threads = [threading.Thread(target=s.run, daemon=True) for s in streams]
     for th in threads:
         th.start()

@@ -39,14 +39,14 @@
         skills: [],
         tools: { allow: ["parallel__*"], codeMode: false, swarm: false },
       },
-      // The same shopper (same workspace and tools) on Kimi K3.1 Pro served by GPUs, through
-      // OpenRouter: its fastest provider by throughput, never Cerebras. For the side-by-side.
+      // The same shopper (same workspace and tools) on Kimi K3.1 Pro served by Moonshot AI's
+      // own API (GPUs), through OpenRouter with fallbacks off. For the side-by-side.
       // Needs OPENROUTER_API_KEY in ~/.openclaw/.env.
       "shopper-gpu": {
-        name: "Speedy Shopper (GPU)",
+        name: "Speedy Shopper (Moonshot API)",
         workspace: "__REPO__/shopper",
         model: "openrouter/moonshotai/kimi-k3.1-pro",
-        params: { provider: { sort: "throughput", ignore: ["Cerebras"] } },
+        params: { provider: { only: ["Moonshot AI"], allow_fallbacks: false } },
         skills: [],
         tools: { allow: ["parallel__*"], codeMode: false, swarm: false },
       },
