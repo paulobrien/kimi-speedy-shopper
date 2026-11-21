@@ -10,8 +10,13 @@
     auth: { token: "${OPENCLAW_GATEWAY_TOKEN}" },
   },
   agents: {
+    ownership: "explicit",
     defaults: {
+      // The web chat opens on the shopper; pick "Mission control" in the agent menu.
+      systemAgent: { agentId: "shopper" },
       model: { primary: "cerebras/moonshotai-kimi-k3.1-pro-trial" },
+      // As the official speed-patch config: Kimi on Cerebras at reasoning_effort low.
+      thinkingDefault: "low",
     },
     entries: {
       // Lean agent for the demo: Thermite MCP tools only, no skills or bootstrap files,
@@ -21,7 +26,16 @@
         workspace: "__REPO__/agent",
         model: "cerebras/moonshotai-kimi-k3.1-pro-trial",
         skills: [],
-        tools: { allow: ["bundle-mcp"], codeMode: false, swarm: false },
+        tools: { allow: ["thermite__*"], codeMode: false, swarm: false },
+      },
+      // Santa's Speedy Shopper: web search only. Its workspace is the Thermite-tuned
+      // configuration (copy the champion's shopper/AGENTS.md into shopper/).
+      shopper: {
+        name: "Speedy Shopper",
+        workspace: "__REPO__/shopper",
+        model: "cerebras/moonshotai-kimi-k3.1-pro-trial",
+        skills: [],
+        tools: { allow: ["parallel__*"], codeMode: false, swarm: false },
       },
     },
   },
@@ -39,6 +53,12 @@
             name: "Kimi K3.1 Pro (Cerebras trial)",
             input: ["text", "image"],
             reasoning: true,
+            compat: {
+              supportsTools: true,
+              supportsStrictMode: false,
+              supportsReasoningEffort: true,
+              supportedReasoningEfforts: ["low", "high", "max"],
+            },
           },
           // Stand-in for pipeline tests until Kimi preview access is live.
           { id: "gpt-oss-120b", name: "gpt-oss-120b (Cerebras)", input: ["text"], reasoning: true },
@@ -48,6 +68,12 @@
   },
   mcp: {
     servers: {
+      // Parallel's free, key-free search MCP (https://parallel.ai/customer-terms).
+      parallel: {
+        url: "https://search.parallel.ai/mcp",
+        transport: "streamable-http",
+        toolFilter: { include: ["web_search", "web_fetch"] },
+      },
       thermite: {
         url: "http://127.0.0.1:8800/mcp",
         transport: "streamable-http",
