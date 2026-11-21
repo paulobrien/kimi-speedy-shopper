@@ -7,3 +7,6 @@ __pycache__/
 *.log
 recordings/
 runs/
+agent/DREAMS.md
+agent/memory/
+kit/.bench-token

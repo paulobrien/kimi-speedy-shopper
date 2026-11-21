@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "name": "speedy-shopper",
+  "target": "cpu",
+  "build": {
+    "copy": ["bench"],
+    "command": ["sh", ".kit/bench/build.sh"],
+    "outputs": ["out/shopper"],
+    "timeout_s": 60,
+    "rss_mib": 256,
+    "disk_mib": 64
+  },
+  "cells": {
+    "gifts": { "params": { "set": "visible", "reps": 2 }, "timeout_s": 1500 },
+    "held": { "params": { "set": "held", "reps": 2 }, "timeout_s": 1500 }
+  },
+  "run": {
+    "copy": ["run"],
+    "command": ["node", "{kit:run/submit.mjs}", "{build:out/shopper}", "{params_json}", "{out}"],
+    "timeout_s": 1500,
+    "rss_mib": 256,
+    "disk_mib": 32
+  },
+  "metrics": {
+    "mean_tps": { "unit": "tok/s", "from": "check", "field": "mean_tps" },
+    "valid_rate": { "unit": "fraction", "from": "check", "field": "valid_rate", "may_be_zero": true },
+    "calls": { "unit": "calls", "from": "check", "field": "calls" }
+  },
+  "check": {
+    "command": ["node", "{kit:check.mjs}", "{params_json}", "{out}"],
+    "timeout_s": 60
+  }
+}
