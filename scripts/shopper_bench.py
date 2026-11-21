@@ -34,6 +34,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from types import SimpleNamespace
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
@@ -126,6 +127,10 @@ def candidate_text(cand):
     return "\n".join(out)
 
 
+def args_min_verified(args):
+    return getattr(args, "min_verified", 4)
+
+
 def attempt(cand, brief, args):
     settings = json.load(open(os.path.join(cand, "settings.json")))
     message = DEFAULT_MESSAGE.replace("{brief}", brief)
@@ -141,7 +146,10 @@ def attempt(cand, brief, args):
                "--json", "--config-override", json.dumps(override), message]
         log_start = os.path.getsize(args.log) if os.path.exists(args.log) else 0
         t0 = time.time()
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=args.timeout + 60)
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=args.timeout + 60)
+        except subprocess.TimeoutExpired:
+            proc = SimpleNamespace(stdout="", stderr=f"timed out after {args.timeout + 60}s")
         wall = time.time() - t0
         time.sleep(0.3)  # let the proxy finish writing the last call
     calls = read_log(args.log, log_start)
@@ -164,7 +172,14 @@ def attempt(cand, brief, args):
             r["evidence"] = r["evidence"] + ["search result: price + buy button"]
     good = [r for r in ver["results"] if r["ok"]]
     ver["verified"] = len(good)
-    ver["pass"] = len(urls) >= 5 and len(good) >= 5 and len({r["domain"] for r in good}) >= 2
+    # Dead = the shop says it doesn't exist (404/410) or the host doesn't answer and no fetcher
+    # or search result vouches for it. Unconfirmed = blocked by bot protection (403/429/503).
+    dead = [r for r in ver["results"] if not r["ok"] and (r["status"] in (404, 410) or
+                                                        (r["status"] == 0 and not r["blocked"]))]
+    ver["strict"] = len(urls) == 5 and len(good) == 5 and len({r["domain"] for r in good}) >= 2
+    ver["pass"] = (len(urls) == 5 and len(good) >= args_min_verified(args) and not dead
+                   and len({r["domain"] for r in good}) >= 2)
+    ver["dead"] = len(dead)
     reasons = []
     if not out.get("ok"):
         reasons.append(f"openclaw run failed: {out.get('error') or out.get('status')}")
@@ -175,7 +190,8 @@ def attempt(cand, brief, args):
     if hard_coded:
         reasons.append(f"{len(hard_coded)} URLs written in the candidate's files")
     if not ver["pass"]:
-        reasons.append(f"only {ver['verified']}/{ver['urls']} verified product pages")
+        reasons.append(f"only {ver['verified']}/{ver['urls']} verified product pages"
+                       + (f", {ver['dead']} dead" if ver.get("dead") else ""))
     if stats.get("calls", 0) == 0:
         reasons.append("no timed model calls (is the proxy running?)")
     return {"brief": brief, "valid": not reasons, "reasons": reasons, "wall_s": round(wall, 1),
@@ -185,7 +201,7 @@ def attempt(cand, brief, args):
             "cached_tokens": sum(c.get("cached_tokens") or 0 for c in calls),
             "per_call": [{"tokens": c.get("completion_tokens"), "reasoning": c.get("reasoning_tokens"),
                           "tps": round(c["tps"]) if c.get("tps") else None} for c in calls],
-            "verified": ver["verified"], "answer": final,
+            "verified": ver["verified"], "strict": ver.get("strict", False), "answer": final,
             "links": [{"url": r["url"], "ok": r["ok"], "status": r["status"], "title": r["title"],
                        "evidence": r["evidence"]}
                       for r in ver["results"]]}
@@ -202,6 +218,8 @@ def main():
     p.add_argument("--base-url", default=os.environ.get("SHOPPER_BASE_URL", "http://127.0.0.1:8899/v1"))
     p.add_argument("--log", default=os.environ.get("TPS_PROXY_LOG", os.path.join(REPO, "runs", "tps_calls.jsonl")))
     p.add_argument("--timeout", type=int, default=180)
+    p.add_argument("--min-verified", type=int, default=4,
+                   help="verified links needed (the rest may be unconfirmed, never dead); 5 = strict")
     p.add_argument("--json", action="store_true", help="print one JSON summary (for judges)")
     a = p.parse_args()
 

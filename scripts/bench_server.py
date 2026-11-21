@@ -86,7 +86,7 @@ def run_bench(req, args):
                 raise ValueError(f"bad file {name!r}")
             with open(os.path.join(cand, name), "w") as f:
                 f.write(text)
-        ns = SimpleNamespace(base_url=args.base_url, log=args.log, timeout=args.timeout)
+        ns = SimpleNamespace(base_url=args.base_url, log=args.log, timeout=args.timeout, min_verified=4)
         attempts = []
         with LOCK:  # one attempt at a time: the proxy log is attributed by position
             for brief in picks:
@@ -151,7 +151,7 @@ def main():
     p.add_argument("--token-file", default=os.path.join(REPO, "kit", ".bench-token"))
     p.add_argument("--base-url", default="http://127.0.0.1:8899/v1")
     p.add_argument("--log", default=os.path.join(REPO, "runs", "tps_calls.jsonl"))
-    p.add_argument("--timeout", type=int, default=180)
+    p.add_argument("--timeout", type=int, default=300)
     a = p.parse_args()
     Handler.token = open(a.token_file).read().strip()
     Handler.args = a

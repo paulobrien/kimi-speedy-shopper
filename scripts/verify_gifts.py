@@ -99,7 +99,8 @@ def check(url):
     status, final, page = fetch(url)
     host = urlsplit(final or url).hostname or ""
     ev = product_evidence(page) if status == 200 else []
-    blocked = status in (401, 403, 429, 503) or "__error__" in page[:20]
+    # Bot walls and timeouts are "blocked" (unconfirmed); DNS or connection failures are dead.
+    blocked = status in (401, 403, 429, 503) or (page.startswith("__error__") and "timed out" in page)
     return {"url": url, "status": status, "final_url": final, "domain": host.removeprefix("www."),
             "title": title_of(page), "evidence": ev,
             "ok": status == 200 and bool(ev) and not any(b in host for b in NOT_RETAIL),
