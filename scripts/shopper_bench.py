@@ -5,7 +5,7 @@ One attempt = one headless OpenClaw turn (`openclaw agent exec`) on Kimi K3.1 Pr
 on Cerebras, through scripts/tps_proxy.py, with a candidate configuration:
 
     <candidate>/AGENTS.md       the shopper's instructions (its workspace)
-    <candidate>/settings.json   {"thinking": "low", "params": {...}, "message": "... {brief} ..."}
+    <candidate>/settings.json   {"thinking": "low", "params": {"temperature": 1.0, ...}}
 
 Each attempt is scored exactly as the official speed patch scores a session:
 the mean (and p90) over model calls of completion_tokens / completion_time from
@@ -128,7 +128,7 @@ def candidate_text(cand):
 
 def attempt(cand, brief, args):
     settings = json.load(open(os.path.join(cand, "settings.json")))
-    message = settings.get("message", DEFAULT_MESSAGE).replace("{brief}", brief)
+    message = DEFAULT_MESSAGE.replace("{brief}", brief)
     with tempfile.TemporaryDirectory(prefix="shopper-") as tmp:
         ws = os.path.join(tmp, "ws")
         shutil.copytree(cand, ws, ignore=shutil.ignore_patterns("settings.json", "briefs.txt"))
