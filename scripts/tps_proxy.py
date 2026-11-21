@@ -65,6 +65,8 @@ def read_log(path, start=0):
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     log_path = "tps_calls.jsonl"
+    max_retries = 40
+    max_wait = 600
     dump_dir = None
 
     def log_message(self, fmt, *args):  # quiet
@@ -93,11 +95,33 @@ class Handler(BaseHTTPRequestHandler):
                 f.write(body)
         headers = {k: v for k, v in self.headers.items() if k.lower() not in HOP}
         headers["Host"] = up.netloc
-        conn = http.client.HTTPSConnection(up.netloc, timeout=300) if up.scheme == "https" \
-            else http.client.HTTPConnection(up.netloc, timeout=300)
         t0 = time.time()
-        conn.request(method, self.path, body=body, headers=headers)
-        resp = conn.getresponse()
+        retries = 0
+        while True:
+            conn = http.client.HTTPSConnection(up.netloc, timeout=300) if up.scheme == "https" \
+                else http.client.HTTPConnection(up.netloc, timeout=300)
+            conn.request(method, self.path, body=body, headers=headers)
+            resp = conn.getresponse()
+            # Cerebras answers 429 queue_exceeded when the whole platform is busy (not our own
+            # limits). Wait and retry, so the agent sees a slow answer rather than a failure;
+            # decode timing is measured server-side, so waiting doesn't change the score.
+            if resp.status == 429 and retries < self.max_retries and time.time() - t0 < self.max_wait:
+                err = resp.read()
+                conn.close()
+                if b"queue_exceeded" in err or b"high traffic" in err:
+                    retries += 1
+                    time.sleep(min(30, 2 * 1.6 ** retries))
+                    continue
+                resp = None
+                break
+            break
+        if resp is None:  # a 429 that isn't the platform queue: pass it through
+            self.send_response(429)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(err)))
+            self.end_headers()
+            self.wfile.write(err)
+            return
         self.send_response(resp.status)
         for k, v in resp.getheaders():
             if k.lower() not in HOP:
@@ -142,7 +166,7 @@ class Handler(BaseHTTPRequestHandler):
         if req_meta:
             ct = (time_info or {}).get("completion_time")
             tokens = (usage or {}).get("completion_tokens")
-            rec = {"t": t0, "wall_s": round(time.time() - t0, 3), "status": resp.status,
+            rec = {"t": t0, "wall_s": round(time.time() - t0, 3), "status": resp.status, "retries": retries,
                    **req_meta, "completion_tokens": tokens, "completion_time": ct,
                    "reasoning_tokens": ((usage or {}).get("completion_tokens_details") or {}).get("reasoning_tokens"),
                    "prompt_tokens": (usage or {}).get("prompt_tokens"),
