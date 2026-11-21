@@ -1,27 +1,27 @@
-# Thermite Mission Control (working title)
+# Speedy Shopper
 
-**Chat with an AI agent that runs autoresearch campaigns at Cerebras speed.**
+**An OpenClaw agent on Kimi K3.1 Pro (Cerebras) that finds five real Christmas gifts in seconds, and an autoresearch loop that makes it faster overnight.**
 
-An [OpenClaw](https://openclaw.ai/) agent running on **Kimi K3.1 Pro on Cerebras** is mission control for [Thermite](https://github.com/iammrduncan/thermite), an open-source autoresearch system. You tell it what you want in plain words. It starts campaigns, reads the judge's verdicts, steers the agents and explains what happened. The demo campaign is a Thermite hill climb on the very thing Cerebras is known for: it searches for the prompt and request settings that get the most tokens per second out of Kimi K3.1 Pro.
+- **The shopper** is an [OpenClaw](https://openclaw.ai/) agent running on **Kimi K3.1 Pro on Cerebras**. Ask it "Find five Christmas gifts for a beginner photographer": it searches the web and answers with five products from real retailers, each with its product link. A verifier then opens every link to prove it's a live product page.
+- **The tuner** is [Thermite](https://github.com/iammrduncan/thermite), an open-source autoresearch system. Its worker agents rewrite the shopper's instructions and request settings. Its judge reruns the shopper on gift briefs it picks at random, and keeps a change only if the shopper still finds five real gifts *and* Kimi's decode speed (tokens/sec) went up.
+- **Mission control** is a second OpenClaw agent on Kimi. It has Thermite's tools, so you can ask it in chat how the speed run is going.
 
-Built for the Cerebras × Moonshot AI **Kimi K3.1 Pro + OpenClaw Weekend Hackathon** (21–22 Nov 2026). `#KimiOnCerebras`
-
-> **Status: prepared, not built.** This repo holds the setup, configuration and test tooling made before the build window. The core project (the TPS kit, the mission-control behaviour and the demo) is built during the window: Sat 21 Nov 10:00 PT → Sun 22 Nov 10:00 PT. See [PLAN.md](PLAN.md).
+Built for the Cerebras × Moonshot AI **Kimi K3.1 Pro + OpenClaw Weekend Hackathon** (21–22 Nov 2026), including the 🎅 **Santa's Speedy Shopper** speed bounty. `#KimiOnCerebras`
 
 ---
 
 ## Contents
 
 - [How it fits together](#how-it-fits-together)
-- [Hackathon requirements and how we meet them](#hackathon-requirements-and-how-we-meet-them)
+- [How speed is measured](#how-speed-is-measured)
+- [No made-up gifts](#no-made-up-gifts)
+- [Hackathon requirements](#hackathon-requirements)
 - [Repository layout](#repository-layout)
-- [Prerequisites](#prerequisites)
-- [Setup](#setup)
-- [Verify the setup](#verify-the-setup)
-- [Using mission control](#using-mission-control)
-- [Token budget](#token-budget)
-- [Recording the demo](#recording-the-demo)
-- [Submission checklist](#submission-checklist)
+- [Prerequisites and setup](#prerequisites-and-setup)
+- [Run the shopper](#run-the-shopper)
+- [Run the hill climb](#run-the-hill-climb)
+- [Results](#results)
+- [Recording and submission](#recording-and-submission)
 - [Troubleshooting](#troubleshooting)
 - [Security notes](#security-notes)
 - [Credits](#credits)
@@ -30,185 +30,212 @@ Built for the Cerebras × Moonshot AI **Kimi K3.1 Pro + OpenClaw Weekend Hackath
 
 ```mermaid
 flowchart LR
-  You([You]) -- chat --> OC["OpenClaw gateway<br/>agent: mission"]
-  OC -- chat completions --> K["Kimi K3.1 Pro<br/>on Cerebras"]
-  OC -- MCP over HTTP<br/>12 tools --> TC["Thermite control<br/>:8800/mcp"]
-  TC -- signed commands --> Rig["Thermite rig<br/>planner, lanes, judge"]
-  Rig -- worker agents --> K
-  Rig -- measures TPS --> K
+  You([You]) -- "Find five gifts for…" --> SH["OpenClaw agent: shopper"]
+  SH -- chat completions --> K["Kimi K3.1 Pro<br/>on Cerebras"]
+  SH -- MCP --> P["Parallel web search<br/>(free MCP)"]
+  SH -- five links --> V["verify_gifts.py<br/>opens every link"]
+  You -- "how's the speed run?" --> MC["OpenClaw agent: mission"]
+  MC -- MCP --> TC["Thermite control"]
+  TC --> Rig["Thermite rig<br/>planner, worker lanes, judge"]
+  Rig -- candidate prompt + settings --> B["bench_server.py<br/>runs the shopper, scores it"]
+  B --> SH2["OpenClaw shopper<br/>(headless, agent exec)"]
+  SH2 --> PX["tps_proxy.py<br/>logs Cerebras timing"] --> K
 ```
 
-- **OpenClaw** is the harness and the interface. The `mission` agent runs on `cerebras/moonshotai-kimi-k3.1-pro-trial`, and its only tools are 12 Thermite MCP tools: read rigs, runs, attempts, queue, events, leaderboard and usage, plus start runs and issue commands.
-- **Thermite** runs the experiments. A planner hands ideas to worker lanes, each lane proposes a change, and a judge the agents can't see or change measures it and keeps only wins that hold up.
-- **Kimi K3.1 Pro on Cerebras** is central three times over: it drives the OpenClaw agent, it can drive Thermite's worker lanes, and it is the system under test in the TPS campaign.
+- **Shopper** ([shopper/](shopper/)): its instructions (`AGENTS.md`) and request settings (`settings.json`). Its only tools are Parallel's `web_search` and `web_fetch`, reached through Parallel's free search MCP endpoint (no key). It answers with exactly five lines: `N. Product — price — retailer — link`.
+- **Bench** ([scripts/shopper_bench.py](scripts/shopper_bench.py)): runs one shopper attempt headlessly with `openclaw agent exec --config config/shopper.json5`, through the TPS proxy, then scores and verifies it.
+- **Thermite kit** ([kit/](kit/)) and contract ([thermite/contract.json](thermite/contract.json)): the hill climb. The judge runs inside Thermite's rig container and posts each candidate's `shopper/` files to the bench service on the host. It scores the mean TPS of two attempts on random briefs, three times per cell, and keeps only consistent wins. Held-out briefs check that a win isn't tuned to particular searches.
+- **Mission control** ([agent/](agent/)): an OpenClaw agent whose only tools are 12 Thermite MCP tools.
 
-## Hackathon requirements and how we meet them
+## How speed is measured
+
+We score speed exactly as the official OpenClaw speed patch does:
+
+- Cerebras ends every streamed response with `usage.completion_tokens` and `time_info.completion_time` (server-side decode time).
+- Each model call's rate is `completion_tokens / completion_time`, so queueing, prefill, network and tool time don't count.
+- The headline is the **mean of the per-call rates** over the session; p90 is shown alongside.
+
+[scripts/tps_proxy.py](scripts/tps_proxy.py) is a pass-through proxy to `api.cerebras.ai` that records those two numbers for every call, plus prompt and cache sizes. `python3 scripts/tps_proxy.py --summary runs/tps_calls.jsonl` prints the mean and p90.
+
+What we saw on day one: identical requests decode at roughly 270–560 tokens/sec depending on shared load. Single samples can't rank one setting against another, which is why the judge repeats every measurement.
+
+## No made-up gifts
+
+The bounty disqualifies made-up, placeholder or hard-coded results. The bench treats an attempt as **valid** only if all of these hold:
+
+1. The answer has exactly five distinct URLs.
+2. Each URL is a live product page on a retail site, on at least two retailers. [scripts/verify_gifts.py](scripts/verify_gifts.py) fetches each one and looks for schema.org `Product` data, `og:type product`, price metadata, or a price beside an add-to-basket button. Shops that block scripts (403/429) are re-checked through Parallel's page fetcher. Big retailers that block both are accepted only when that run's own search result for the URL shows a price and a buy signal.
+3. Every URL appeared in a tool result during that attempt. The proxy saves request bodies, so the bench can see exactly what the model was shown.
+4. No URL is written in the candidate's own files. The contract also forbids URL patterns in `shopper/`.
+
+Thermite only measures speed on valid runs.
+
+## Hackathon requirements
 
 | Requirement | How |
 | --- | --- |
-| Kimi K3.1 Pro on Cerebras as a central component | Mission-control agent, Thermite workers and the measured system are all Kimi on Cerebras |
-| Use the OpenClaw harness | The whole user-facing loop is an OpenClaw agent (`openclaw agent --agent mission`, the Control UI or a channel) |
-| Core functionality built during the window | Only setup, config and smoke tests exist before kickoff (see [PLAN.md](PLAN.md)) |
-| Demo video ≤ 60 s showing Cerebras speed | `scripts/record.sh` caps at 60 s; side-by-side with a GPU-served model planned |
-| X post tagging @Cerebras @Kimi_Moonshot with #KimiOnCerebras by Sun 10:00 PT | [Submission checklist](#submission-checklist) |
-
-Model ID: `moonshotai-kimi-k3.1-pro-trial`, on the standard Cerebras API (`https://api.cerebras.ai/v1`). Reasoning is off by default; it is turned on with `reasoning_effort`. Hackathon access runs until Mon 23 Nov 10:00 PT at about 100 requests/min and 100K tokens/min per participant.
+| Kimi K3.1 Pro on Cerebras as a central component | Every shopper and mission-control turn runs on `moonshotai-kimi-k3.1-pro-trial` |
+| OpenClaw harness | The shopper and mission control are OpenClaw agents (gateway web chat, CLI, or `agent exec` headless) |
+| Speed bounty task: five real Christmas gifts, with links | The shopper, checked by `verify_gifts.py` |
+| TPS measured with the official patch | The bounty recording uses the patched OpenClaw in a separate checkout (not in this repo). Our proxy reproduces its formula for tuning |
+| Public demo on standard OpenClaw | This repo's setup uses the stock `openclaw` npm package |
+| Demo ≤ 60 s showing Cerebras speed | `scripts/record.sh` caps at 60 s |
 
 ## Repository layout
 
 ```
 .
-├── README.md                     this file
-├── PLAN.md                       idea, constraints, what's done, what's left for the build window
-├── .env.example                  variables for the scripts (copy to .env, which is gitignored)
-├── agent/                        workspace of the OpenClaw "mission" agent (kept tiny on purpose)
-│   ├── AGENTS.md                 the agent's instructions
-│   └── BOOTSTRAP.md IDENTITY.md SOUL.md USER.md   minimal stand-ins for OpenClaw's onboarding files
+├── README.md, PLAN.md
+├── shopper/                      the shopper agent's workspace (AGENTS.md, settings.json, tiny persona files)
+├── agent/                        the mission-control agent's workspace
 ├── config/
-│   └── openclaw.example.json5    OpenClaw config template (no secrets; __REPO__ is filled in on install)
+│   ├── openclaw.example.json5    gateway config: Cerebras provider, both agents, Parallel + Thermite MCP
+│   └── shopper.json5             pinned config for headless shopper runs (the bench)
+├── kit/                          Thermite kit: build packs shopper/, run posts it to the bench, check reads the verdict
+├── thermite/
+│   ├── contract.json             hill-climb contract (metric mean_tps, max; editable: shopper/**)
+│   └── seed/                     the project Thermite starts from (README for the worker agents + shopper/)
 └── scripts/
-    ├── setup-openclaw.sh         install the config and secrets file, start the gateway
-    ├── cerebras_smoke.py         one streamed request: time to first token and tokens/sec
-    ├── openclaw_smoke.sh         end to end: OpenClaw agent → model → Thermite tool call
-    └── record.sh                 record the screen to a ≤60 s 1080p MP4
+    ├── tps_proxy.py              Cerebras pass-through proxy; per-call TPS like the speed patch
+    ├── verify_gifts.py           checks five links are live product pages
+    ├── parallel_mcp.py           tiny client for Parallel's free search MCP
+    ├── shopper_bench.py          run + score + verify one or more shopper attempts
+    ├── bench_server.py           HTTP front for the bench, for Thermite's judge (Docker bridge only)
+    ├── make_thermite_repos.sh    build the seed and kit repos, bundles and assign payload
+    ├── thermite_prepare.mjs      validate kit + contract with Thermite's own schema code
+    ├── thermite_mcp.py           call any Thermite MCP tool from the shell
+    ├── setup-openclaw.sh         install the gateway config and secrets file, restart the gateway
+    ├── cerebras_smoke.py         one streamed request: TTFT and TPS
+    ├── openclaw_smoke.sh         mission control → Thermite tool call, end to end
+    └── record.sh                 screen capture to a ≤60 s 1080p MP4
 ```
 
-## Prerequisites
+## Prerequisites and setup
 
-| Need | Version used | Notes |
-| --- | --- | --- |
-| Linux with X11 | Ubuntu, X11 session | `record.sh` uses ffmpeg's `x11grab` |
-| Node.js | 24.22.3 via nvm | OpenClaw needs Node 24.16+ or 26.1+ |
-| OpenClaw | 2026.11.6 | `npm install -g openclaw@latest --allow-scripts=openclaw` |
-| Thermite | 0.2.5, local stack | Control at `http://127.0.0.1:8800`; operator token in its `.dev/secrets/control-operator-token` |
-| Python | 3.9+ | Standard library only |
-| ffmpeg, OBS | 6.1, 30.0 | Recording |
-| Cerebras account | Hackathon preview access | API key in `~/.openclaw/.env` |
+| Need | Version used |
+| --- | --- |
+| Linux (X11 for recording) | Ubuntu |
+| Node.js | 24.22.3 via nvm (OpenClaw needs 24.16+) |
+| OpenClaw | 2026.11.6 (`npm install -g openclaw@latest --allow-scripts=openclaw`) |
+| Python | 3.9+, standard library only |
+| Cerebras API key | with Kimi K3.1 Pro hackathon access |
+| Thermite (for the hill climb) | 0.2.5 local stack, its source checkout for `thermite_prepare.mjs` |
+| ffmpeg / OBS | 6.1 / 30 (recording) |
 
-## Setup
-
-1. **Node 24 and OpenClaw**
-
-   ```bash
-   nvm install 24 && nvm alias default 24
-   ```
-   ```bash
-   npm install -g openclaw@latest --allow-scripts=openclaw
-   ```
-
-2. **Thermite.** Start its local stack ([quick start](https://usethermite.com/tutorials/first-run/)) and check that `http://127.0.0.1:8800/ui` loads.
-
-3. **OpenClaw config, secrets and gateway.** Pass the path to Thermite's operator token:
+1. Install the gateway config and secrets file. The token path is only needed for mission control:
 
    ```bash
    scripts/setup-openclaw.sh /path/to/thermite/.dev/secrets/control-operator-token
    ```
 
-   This writes `~/.openclaw/openclaw.json` from [config/openclaw.example.json5](config/openclaw.example.json5) and backs up any existing file. It creates `~/.openclaw/.env` (mode 600), installs the `openclaw-gateway` systemd user service on `127.0.0.1:18789`, and restarts it.
-
-4. **Cerebras key.** Edit `~/.openclaw/.env` and set `CEREBRAS_API_KEY=...`, then restart the gateway:
+   This writes `~/.openclaw/openclaw.json`, backs up any existing one, creates `~/.openclaw/.env` (mode 600) and restarts the `openclaw-gateway` user service on `127.0.0.1:18789`.
+2. Put `CEREBRAS_API_KEY=...` in `~/.openclaw/.env`, then rerun the script (or restart the service).
+3. Check Kimi:
 
    ```bash
-   systemctl --user restart openclaw-gateway.service
+   python3 scripts/cerebras_smoke.py --reasoning-effort low --quiet
    ```
 
-5. **Thermite's own model (in the build window).** In Thermite's dashboard, add Cerebras under **Settings › Providers** as an OpenAI-compatible provider (`https://api.cerebras.ai/v1`), then set the rig's worker model to Kimi K3.1 Pro. Adding a provider needs the owner's sign-in. Note that a rig's models apply to every run on that rig.
+## Run the shopper
 
-## Verify the setup
+**In chat:** run `openclaw dashboard`, open the web chat (it starts on **Speedy Shopper**) and ask for gifts.
 
-```bash
-python3 scripts/cerebras_smoke.py --list-models
-```
-```bash
-python3 scripts/cerebras_smoke.py --quiet
-```
-```bash
-scripts/openclaw_smoke.sh
-```
-
-- `cerebras_smoke.py` reads `CEREBRAS_API_KEY` from the environment or `./.env`. It reports time to first token, client-side tokens/sec, and server-side tokens/sec from Cerebras's `time_info.completion_time`. Use `--model`, `--prompt`, `--max-tokens` or `--reasoning-effort low|medium|high` to vary the request.
-- `openclaw_smoke.sh [model]` asks the `mission` agent to call Thermite's `list_rigs`. With no argument it uses Kimi; pass `cerebras/gpt-oss-120b` to test the pipeline on a stand-in model.
-
-Results on 20 Nov 2026, before Kimi preview access opened, with `gpt-oss-120b` as the stand-in:
-
-| Check | Result |
-| --- | --- |
-| `cerebras_smoke.py --model gpt-oss-120b --reasoning-effort low` | 512 tokens, 275 ms to first token, ~1,400 tokens/s (server), ~1,480 tokens/s (client, after first token) |
-| `openclaw_smoke.sh cerebras/gpt-oss-120b` | "Rig local-1 is live.", 1 Thermite tool call, 2.1 s end to end |
-| Kimi `moonshotai-kimi-k3.1-pro-trial` | 404 `model_not_found`: preview access not yet live on the key |
-
-## Using mission control
-
-From the command line:
+**From the CLI, through the gateway:**
 
 ```bash
-openclaw agent --agent mission --message "Which Thermite runs are live, and what's the best result so far?"
+openclaw agent --agent shopper --message "Find five Christmas gifts for a cat owner."
 ```
 
-Or open the OpenClaw Control UI with `openclaw dashboard` (http://127.0.0.1:18789) and pick the **Mission control** agent. OpenClaw can also connect the agent to a chat channel (Telegram, Discord, Slack and others); see the OpenClaw docs.
-
-What the agent can do through its 12 tools:
-
-- **Look:** `list_rigs`, `get_run`, `get_attempt`, `run_queue`, `recent_events`, `leaderboard`, `model_usage`, `list_commands`, `command_status`, `kits`
-- **Act:** `start_run` (a new run of a campaign Thermite keeps) and `issue_command` (pause, resume, redirect, message agents, and so on, within the operator token's rights)
-
-Promotions that need the owner's approval stay with you: the operator token can't approve them.
-
-## Token budget
-
-Hackathon limits are about **100 requests/min and 100K tokens/min**. The free tier for the stand-in model is 5 requests/min and 30K tokens/min. Every part of the system shares that budget, so request size matters:
-
-| Agent | Request size | Why |
-| --- | --- | --- |
-| OpenClaw default `main` | ~84 KB, ~21K tokens | Full system prompt, onboarding files, skills list; MCP tools hidden behind tool search (an extra round trip) |
-| `mission` | ~25 KB, ~6–7K tokens | Only Thermite tools (`tools.allow: ["bundle-mcp"]`), `skills: []`, tool search off, minimal workspace files |
-| All 68 Thermite tools | ~130 KB of schemas, ~33K tokens | Why `toolFilter.include` keeps only 12 |
-
-Keep Thermite to one or two lanes during the event. The TPS kit's own measurement calls count against the same limit.
-
-## Recording the demo
+**Benchmarked and verified (headless, through the TPS proxy):**
 
 ```bash
-scripts/record.sh recordings/demo.mp4 1920x1080+0+0
+python3 scripts/tps_proxy.py --log runs/tps_calls.jsonl --dump-dir runs/dumps &
+```
+```bash
+python3 scripts/shopper_bench.py --brief "a cat owner"
+```
+```bash
+python3 scripts/shopper_bench.py --reps 6 --json > runs/bench.json
 ```
 
-- Records a region (`WxH+X+Y`) or the whole screen, at 30 fps, padded to 1080p H.264, and stops at 60 s (`SECONDS_MAX` to shorten). `recordings/` is gitignored.
-- OBS is installed for anything more elaborate, such as a side-by-side layout with a GPU-served model.
-- Before recording, hide notifications, unrelated browser tabs, terminals with keys, and e-mail.
+**Verify any answer:**
 
-What the video must show (≤ 60 s): Cerebras speed making a visible difference, ideally side by side with a GPU-based provider, plus the project's key workflow.
+```bash
+openclaw agent --agent shopper --json --message "Find five Christmas gifts for a gardener" | python3 -c 'import json,sys; print(json.load(sys.stdin)["payloads"][0]["text"])' | python3 scripts/verify_gifts.py -
+```
 
-## Submission checklist
+## Run the hill climb
 
-Deadline: **Sun 22 Nov 2026, 10:00 AM PT**. Engagement is counted Tue 24 Nov 10:00 AM PT.
+1. Start the proxy (above), then the bench service on the Docker bridge. It listens only on `172.17.0.1`, which Thermite's rig container reaches as `host.docker.internal`, and needs a shared token in `kit/.bench-token` (gitignored):
 
-- [ ] Demo video, 60 s or less
-- [ ] Public GitHub repo (this one) with an updated README
-- [ ] **X post (required):** project name, team handles, a 2–4 sentence description, the video, the repo link, tagging `@Cerebras` `@Kimi_Moonshot` and including `#KimiOnCerebras`
-- [ ] **r/cerebras post (optional):** the same content, with the flair "Kimi K3.1 Pro Hackathon"
-- [ ] TPS bounty entry: rules to be confirmed at kickoff or in `#hackathon-support`
-- [ ] Organic engagement only: no paid promotion or boosting
+   ```bash
+   openssl rand -hex 24 > kit/.bench-token
+   ```
+   ```bash
+   python3 scripts/bench_server.py &
+   ```
+2. Build the repos, add the kit to control, drop the seed bundle in the rig's inbox and assign the run. `make_thermite_repos.sh` writes `runs/thermite/assign.json`:
+
+   ```bash
+   scripts/make_thermite_repos.sh speedy-shopper-1 /path/to/thermite/.dev/inbox
+   ```
+   ```bash
+   python3 -c "import base64,json; json.dump({'name':'speedy-shopper-kit','bundle_base64':base64.b64encode(open('runs/thermite/speedy-shopper-kit.bundle','rb').read()).decode()}, open('runs/thermite/kit_add.json','w'))"
+   ```
+   ```bash
+   python3 scripts/thermite_mcp.py call kit_add @runs/thermite/kit_add.json
+   ```
+   ```bash
+   python3 -c "import json; json.dump({'kind':'assign_campaign','rig':'local-1','payload':json.load(open('runs/thermite/assign.json'))}, open('runs/thermite/issue.json','w'))"
+   ```
+   ```bash
+   python3 scripts/thermite_mcp.py call issue_command @runs/thermite/issue.json
+   ```
+3. Watch it in Thermite's dashboard, or ask mission control:
+
+   ```bash
+   openclaw agent --agent mission --message "How is the speedy-shopper run going?"
+   ```
+4. Take the champion: copy its `shopper/AGENTS.md` and `settings.json` into [shopper/](shopper/). The gateway's shopper agent uses that workspace. Its `thinking` value maps to the agent's thinking level.
+
+## Results
+
+_Filled in as the campaign runs._
+
+| Configuration | Valid runs | Mean TPS (median of runs) | Calls per run |
+| --- | --- | --- | --- |
+| Starting point (seed) | | | |
+| Thermite champion | | | |
+
+## Recording and submission
+
+- `scripts/record.sh recordings/demo.mp4 1920x1080+0+0` records a region at 30 fps to 1080p H.264, stopping at 60 s. `recordings/` is gitignored. Hide notifications, keys and e-mail first.
+- **Public demo (X, Reddit):** standard OpenClaw. Show the shopper answering in seconds, the verifier opening all five links, a GPU-served comparison, and Thermite's climb.
+- **Speed bounty (Discord `#share-your-demo`):** run the shopper in the **patched** OpenClaw web chat (separate checkout). Show the mean tok/s readout and the five links, and write `Speed Bounty entry: N TPS` in the message.
+- X post: project name, team handles, 2–4 sentence description, video, repo link, `@Cerebras @Kimi_Moonshot #KimiOnCerebras`. Reddit r/cerebras with the flair "Kimi K3.1 Pro Hackathon". Deadline **Sun 22 Nov 10:00 PT**.
 
 ## Troubleshooting
 
 | Symptom | Cause and fix |
 | --- | --- |
-| `model_not_found` for `moonshotai-kimi-k3.1-pro-trial` | Preview access isn't on the key yet. Check `cerebras_smoke.py --list-models`; ask in `#hackathon-support` if it's still missing after kickoff. |
-| Agent run hangs, gateway log shows `failoverReason=rate_limit` | Tokens-per-minute limit. Use `--agent mission`, not `main`; check headers with a direct request (`x-ratelimit-remaining-tokens-minute`). |
-| `Secret ... CEREBRAS_API_KEY ... unavailable` | Key missing from `~/.openclaw/.env`, or the gateway wasn't restarted after adding it. |
-| `openclaw mcp probe` says it needs exclusive offline state ownership | It only runs with the gateway stopped: `systemctl --user stop openclaw-gateway.service`, probe, then start it again. `openclaw gateway stop` doesn't stop the systemd service. |
-| Gateway won't start (exit 78) | Invalid config: run `openclaw config validate`. |
-| Logs | `journalctl --user -u openclaw-gateway.service -f` |
+| Shopper runs take 30–100 s even though decode takes about 1 s | Queueing at Cerebras under shared load. It doesn't count towards TPS. |
+| `only 4/5 verified product pages` | A shop blocked both fetchers, or the model chose a category/list page. Look at `links` in the bench's `--json` output. |
+| `URLs not in any tool result` | The model edited or invented a URL. The attempt is invalid by design. |
+| `no timed model calls` | The TPS proxy isn't running, or the bench points elsewhere (`--base-url`). |
+| Agent run hangs with `rate_limit` | 100K tokens/min. Run one bench at a time; pause the Thermite run while recording. |
+| Gateway won't start (exit 78) | `openclaw config validate` |
 
 ## Security notes
 
-- No secrets are in this repo. `.env` files are gitignored. OpenClaw reads `CEREBRAS_API_KEY`, `THERMITE_MCP_TOKEN` and `OPENCLAW_GATEWAY_TOKEN` from `~/.openclaw/.env` (mode 600) through `${VAR}` references in its config.
-- The OpenClaw gateway binds to loopback only and requires its token.
-- The agent holds Thermite's **operator** token. The tool filter leaves out the tools that could start paid RunPod pods, change rig settings or reach the knowledge base. `issue_command` still acts on any run on the rig, so it can pause or redirect existing campaigns.
-- Text Thermite returns (agent notes, queue items) is treated as data, and the agent's instructions say so.
+- No secrets in the repo: keys live in `~/.openclaw/.env` (mode 600) and reach configs through `${VAR}` references. The bench token is in gitignored `kit/.bench-token`.
+- The gateway binds to loopback only. The bench service binds to the Docker bridge address only and checks a token. The proxy binds to loopback and never logs the `Authorization` header.
+- Mission control holds Thermite's operator token, with a 12-tool filter that leaves out the tools that could start paid RunPod pods or change rig settings.
+- Web pages and Thermite text are treated as data. The shopper's only tools are search and fetch, and the verifier runs outside the model.
+- The official speed patch is not in this repo and must not be published.
 
 ## Credits
 
 - [Cerebras](https://cerebras.ai/) inference and [Moonshot AI](https://www.moonshot.ai/)'s Kimi K3.1 Pro
 - [OpenClaw](https://openclaw.ai/) (MIT)
 - [Thermite](https://github.com/iammrduncan/thermite) (Apache-2.0)
+- [Parallel](https://parallel.ai/) free search MCP
