@@ -1,0 +1,52 @@
+// Pinned OpenClaw config for the shopper, used by `openclaw agent exec --config`.
+// scripts/shopper_bench.py fills __BASE_URL__ (the TPS proxy, or Cerebras directly)
+// and merges the candidate's settings.json on top with --config-override.
+{
+  agents: {
+    defaults: {
+      model: { primary: "cerebras/moonshotai-kimi-k3.1-pro-trial" },
+      thinkingDefault: "low",
+      skills: [],
+    },
+  },
+  tools: {
+    allow: ["bundle-mcp"],
+    toolSearch: false,
+    codeMode: false,
+  },
+  models: {
+    mode: "merge",
+    providers: {
+      cerebras: {
+        baseUrl: "__BASE_URL__",
+        apiKey: "${CEREBRAS_API_KEY}",
+        api: "openai-completions",
+        models: [
+          {
+            id: "moonshotai-kimi-k3.1-pro-trial",
+            name: "Kimi K3.1 Pro (Cerebras)",
+            reasoning: true,
+            input: ["text", "image"],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            compat: {
+              supportsTools: true,
+              supportsStrictMode: false,
+              supportsReasoningEffort: true,
+              supportedReasoningEfforts: ["low", "high", "max"],
+            },
+          },
+        ],
+      },
+    },
+  },
+  mcp: {
+    servers: {
+      // Parallel's free, key-free search MCP (https://parallel.ai/customer-terms).
+      parallel: {
+        url: "https://search.parallel.ai/mcp",
+        transport: "streamable-http",
+        toolFilter: { include: ["web_search", "web_fetch"] },
+      },
+    },
+  },
+}
