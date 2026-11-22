@@ -6,7 +6,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the handles, number
 
 > Speedy Shopper 🎅⚡ An OpenClaw agent on Kimi K3.1 Pro finds 5 real Christmas gifts with links in seconds. Overnight, Thermite autoresearch tested 8 speed ideas against a judge it can't touch. One held up: +8% decode speed over 18 paired runs, every gift still a live product page.
 >
-> Team: <@handle>
+> Team: @paulobrien
 > Code: https://github.com/paulobrien/kimi-speedy-shopper
 >
 > @Cerebras @Kimi_Moonshot #KimiOnCerebras
@@ -18,7 +18,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the handles, number
 **Title:** Speedy Shopper: a Kimi K3.1 Pro gift-finding agent that an autoresearch loop tuned for speed overnight
 
 - **Project name:** Speedy Shopper
-- **Team members:** <handles>
+- **Team members:** u/paulobrien
 - **Description:** Speedy Shopper is an OpenClaw agent running on Kimi K3.1 Pro on Cerebras. It searches the web and returns five real Christmas gifts with product links, and a verifier opens every link to prove it's a live product page. We then pointed Thermite, an open-source autoresearch system, at the agent: its workers rewrite the agent's instructions and request settings, and its judge reruns the shopper on random gift briefs, keeping a change only if the gifts are still real and Kimi's server-side decode speed went up. A second OpenClaw agent on Kimi is mission control for the campaign, in chat.
 - **GitHub:** https://github.com/paulobrien/kimi-speedy-shopper
 - **Demo video:** <upload or YouTube link>
