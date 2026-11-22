@@ -30,7 +30,7 @@ tok/s. "Inconclusive" means the interval still includes zero.
 | Idea | Why it might help | Verdict | Evidence |
 | --- | --- | --- | --- |
 | Reasoning effort `high` vs `low` | Longer reasoning per call spreads any fixed per-call cost | **No effect** | −0.9% [−9.9%, +9.1%] |
-| Longer, templated search call (10 queries, one fixed pattern) | The short tool-call turn is half the calls in the mean; making it longer and predictable lifts it | **Promising, not proven** | +9.2% [−0.8%, +20.1%], 420 vs 398 tok/s |
+| Longer, templated search call (10 queries, one fixed pattern) | The short tool-call turn is half the calls in the mean; making it longer and predictable lifts it | **Faster: adopted** | Judged twice: +9.2% [−0.8%, +20.1%] (420 vs 398 tok/s) and +6.3% [−3.4%, +16.9%] (435 vs 401). Pooled over 18 paired runs: **+7.7% [+0.4%, +15.0%]**, every run still 5 real links |
 | Pin to exactly 2 calls (no `web_fetch`) | Fewer short, slow calls in the mean | **Inconclusive, then invalid** | +6.2% [−3.5%, +16.8%] first time; on re-judge it invented a link (not in any search result), which the judge rejects |
 | Copy 8–10 candidates into a template while reasoning | Copied text is easy for a draft model to predict | **Invalid** | The answer listed 10 links and most weren't product pages |
 | Temperature 0 | Speculative decoding accepts more drafted tokens when greedy | **Likely slower** | −9.0% [−17.2%, +0.2%]: keep the default temperature 1.0 |
@@ -48,7 +48,16 @@ What this says so far:
 
 ## Recommendations
 
-_Filled in from confirmed wins._
+1. **Make every call long and predictable.** The score is a mean over calls, so a short tool-call
+   turn drags it down. Ask for one search call with many queries in a fixed template
+   (`<gift idea> for <recipient> buy online price` × 10) rather than a few short ad-hoc ones.
+   This is the change we kept: ~+8% over 18 paired runs.
+2. **Leave sampling alone.** Temperature 0 was probably slower (−9%), and reasoning effort
+   `high` made no difference. Kimi on Cerebras rejects `none`, `minimal` and `xhigh`.
+3. **Don't trade away correctness.** Banning page fetches and forcing long candidate lists both
+   produced invented or wrong links. Keep a verifier in the loop that the agent can't edit.
+4. **Measure over many runs.** Per-call speed swings ±25% with shared load. One fast run proves
+   nothing; paired runs on random briefs do.
 
 ## Reproduce
 
