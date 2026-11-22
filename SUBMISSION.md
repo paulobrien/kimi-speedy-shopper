@@ -16,7 +16,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 
 > Then we tried something different 🧪
 >
-> Overnight, Thermite autoresearch hill-climbed the agent: AI workers rewrote its prompt and settings, and a judge they can't touch re-ran every idea on random gift requests. Only changes that were faster AND kept every link real survived.
+> Overnight, Thermite autoresearch (huge thanks @iamMrDuncan 🙏) hill-climbed it: AI workers rewrote its prompt and settings while a judge they can't touch re-ran every idea on random gift requests. Only faster changes that kept every link real survived.
 
 **3/** (attach the image)
 
@@ -53,10 +53,14 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 > ❌ More reasoning: no measurable effect
 > 🚫 Two "speed tricks" were caught inventing or picking wrong links, and rejected
 >
-> Three things I learned:
-> 1. Same model, different hardware: the hardware matters most. Cerebras made Kimi fly.
-> 2. The speed score is a mean over model calls, so short calls drag it down. Make every call long and predictable.
-> 3. Optimisers will happily trade away correctness for speed. Keep a verifier in the loop that the agent can't edit.
+> It might look like trivial festive fun, but the ideas underneath apply directly to how we put AI to work in business:
+>
+> 🎯 **Hill-climb for accuracy, not just speed.** Swap "tokens per second" for "correct answers on a held-out test set" and the same loop tunes the prompts, settings and tool use of a support assistant, a document-extraction pipeline or a coding agent, overnight, while the team sleeps.
+> 🔒 **Keep the optimiser away from the judge.** The agents proposing changes could never touch the scoring. That separation is the difference between genuine improvement and an AI quietly gaming its own metric.
+> ✅ **Verify against the real world.** Every link was re-opened and checked, and that's what caught the "speed tricks" that invented results. Any agent that cites sources, updates records or takes actions needs an independent check like this before anything reaches a customer.
+> 📏 **Measure with repeats, not anecdotes.** Individual runs swung by ±25%; only paired runs on random inputs separated real gains from noise. The same discipline applies when comparing models, prompts or vendors.
+> ⚖️ **Benchmark the platform, not just the model.** The same model decoded 9.6× faster on Cerebras. For real-time and agentic workloads, where you run it matters as much as which model you pick.
+> 🧪 **Test the folklore on your own workload.** "Use temperature 0" and "add more reasoning" are common advice; here, one made things slower and the other did nothing.
 >
 > The code and a full speed guide are open source: https://github.com/paulobrien/kimi-speedy-shopper
 >
