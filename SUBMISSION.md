@@ -7,7 +7,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the handles, number
 > Speedy Shopper 🎅⚡ An OpenClaw agent on Kimi K3.1 Pro finds 5 real Christmas gifts with links in seconds. Overnight, Thermite autoresearch tested 8 speed ideas against a judge it can't touch. One held up: +8% decode speed over 18 paired runs, every gift still a live product page.
 >
 > Team: <@handle>
-> Code: <github link>
+> Code: https://github.com/paulobrien/kimi-speedy-shopper
 >
 > @Cerebras @Kimi_Moonshot #KimiOnCerebras
 
@@ -20,7 +20,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the handles, number
 - **Project name:** Speedy Shopper
 - **Team members:** <handles>
 - **Description:** Speedy Shopper is an OpenClaw agent running on Kimi K3.1 Pro on Cerebras. It searches the web and returns five real Christmas gifts with product links, and a verifier opens every link to prove it's a live product page. We then pointed Thermite, an open-source autoresearch system, at the agent: its workers rewrite the agent's instructions and request settings, and its judge reruns the shopper on random gift briefs, keeping a change only if the gifts are still real and Kimi's server-side decode speed went up. A second OpenClaw agent on Kimi is mission control for the campaign, in chat.
-- **GitHub:** <link>
+- **GitHub:** https://github.com/paulobrien/kimi-speedy-shopper
 - **Demo video:** <upload or YouTube link>
 
 ## LinkedIn post
@@ -36,7 +36,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the handles, number
 > - The score is a mean over model calls, so short calls drag it down. Make every call long and predictable.
 > - Speed tricks can quietly break correctness. Keep a verifier in the loop that the agent can't edit.
 >
-> Speed guide and code: <repo link>
+> Speed guide and code: https://github.com/paulobrien/kimi-speedy-shopper
 >
 > #AI #Agents #Cerebras #OpenSource
 
@@ -44,7 +44,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the handles, number
 
 > Speed Bounty entry: <N from the recording> TPS
 >
-> Santa's Speedy Shopper on the patched OpenClaw web chat, Kimi K3.1 Pro on Cerebras. The video shows the mean tok/s readout and the five products with their links. The shopper's prompt and settings were tuned by a Thermite hill climb on the same metric. Repo: <link>
+> Santa's Speedy Shopper on the patched OpenClaw web chat, Kimi K3.1 Pro on Cerebras. The video shows the mean tok/s readout and the five products with their links. The shopper's prompt and settings were tuned by a Thermite hill climb on the same metric. Repo: https://github.com/paulobrien/kimi-speedy-shopper
 
 ## Video shot list (≤ 60 s, standard OpenClaw)
 
