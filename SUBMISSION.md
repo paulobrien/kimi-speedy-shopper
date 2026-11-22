@@ -66,7 +66,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 
 ## Speed Bounty (Discord #share-your-demo)
 
-> Speed Bounty entry: <N from the recording> TPS 🎅⚡
+> Speed Bounty entry: 483 TPS 🎅⚡
 >
 > Santa's Speedy Shopper: OpenClaw + Kimi K3.1 Pro on Cerebras, patched web chat. Five real gifts, five live product links (all re-opened and verified), and the mean tok/s readout on screen. The shopper's prompt was tuned for exactly this metric by an overnight Thermite hill climb: 857 judged runs, and only changes that were faster AND kept every link real survived. Repo: https://github.com/paulobrien/kimi-speedy-shopper
 

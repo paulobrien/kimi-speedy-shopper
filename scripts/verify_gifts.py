@@ -40,7 +40,8 @@ NOT_RETAIL = ("wikipedia.org", "youtube.com", "reddit.com", "pinterest.", "faceb
 PRICE_RE = re.compile(r"(?:[$£€]\s?\d[\d,]*(?:\.\d{2})?|\d[\d,]*(?:\.\d{2})?\s?(?:USD|GBP|EUR))")
 CART_RE = re.compile(r"add to (?:cart|basket|bag|trolley)|buy now|in stock|add-to-cart|addtocart"
                      r"|add this item|out of stock|quantity|\bsku\b|product code|read reviews"
-                     r"|(?:choose|select) (?:a )?(?:colour|color|size)", re.I)
+                     r"|(?:choose|select) (?:a )?(?:colour|color|size)"
+                     r"|regular price|sale price|unit price|(?:free )?(?:shipping|delivery) on orders", re.I)
 
 
 def extract_urls(text):
