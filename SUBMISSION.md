@@ -62,9 +62,9 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 
 ## Speed Bounty (Discord #share-your-demo)
 
-> Speed Bounty entry: 504 TPS
+> Speed Bounty entry: 483 TPS
 >
-> Santa's Speedy Shopper, running OpenClaw and Kimi K3.1 Pro on Cerebras in the patched web chat. The video shows the TPS readout and the five products with their links, all re-checked as live product pages. The prompt was tuned for this metric by an overnight Thermite hill climb (857 judged runs, and a change only stuck if it was faster and every link stayed real). Repo: https://github.com/paulobrien/kimi-speedy-shopper
+> Santa's Speedy Shopper, running OpenClaw and Kimi K3.1 Pro on Cerebras in the patched web chat. The video is a live run: the TPS readout and the five products with their links, all re-checked as live product pages. Earlier the same day another run topped that at 504 TPS (584 p90, 5/5 links), but I didn't have it recording, so I'm entering the one on video. The prompt was tuned for this metric by an overnight Thermite hill climb (857 judged runs, and a change only stuck if it was faster and every link stayed real). Repo: https://github.com/paulobrien/kimi-speedy-shopper
 
 ## What's in the videos
 
@@ -79,4 +79,4 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 | 49–55 s | Thermite verdicts chart with 95% intervals |
 | 55–58 s | End card: repo link and tags |
 
-**Speed Bounty** (15 s, patched OpenClaw web chat, Discord only): our top run, "a dad who likes cooking and barbecue" (Sun ~13:30 GMT, worked for 11 s), with the patch's readout 504 tok/s mean · 584 p90 (server) and the five products with links, then a card showing all five re-verified live. A live-recorded take at 483 tok/s (5/5) is kept as `bounty483.mp4`.
+**Speed Bounty** (37 s, patched OpenClaw web chat, Discord only): a live "cat owner" run with the patch's readout, 483 tok/s mean · 587 p90 (server), then a card listing the five links, all verified live. Our top run (504 tok/s, 5/5, Sun ~13:30 GMT) wasn't recorded live; the message mentions it.
