@@ -1,7 +1,6 @@
 # Speed guide: getting the most tokens/sec from Kimi K3.1 Pro on Cerebras
 
-_Draft. The findings fill in as the Thermite campaign proves or rejects each idea; every claim
-here should point at a measurement._
+_Findings from an overnight Thermite hill climb (21–22 Nov 2026). Every claim points at a measurement._
 
 ## How speed is scored
 
@@ -24,13 +23,28 @@ here should point at a measurement._
 
 ## What the hill climb tested
 
+Each verdict below is Thermite's judge comparing the candidate against the champion on
+paired runs (n = 9 per side, random gift briefs), with a 95% interval on the change in mean
+tok/s. "Inconclusive" means the interval still includes zero.
+
 | Idea | Why it might help | Verdict | Evidence |
 | --- | --- | --- | --- |
-| `reasoning_effort` max vs low | Longer reasoning per call spreads fixed per-call cost | _pending_ | |
-| Temperature 0 | Speculative decoding accepts more drafted tokens when greedy | _pending_ | |
-| One search call, no extra fetches | Fewer short, slow calls in the mean | _pending_ | |
-| Copy titles/URLs verbatim from results | Copied text is easy for a draft model to predict | _pending_ | |
-| Structured, predictable answer format | Same as above | _pending_ | |
+| Reasoning effort `high` vs `low` | Longer reasoning per call spreads any fixed per-call cost | **No effect** | −0.9% [−9.9%, +9.1%] |
+| Longer, templated search call (10 queries, one fixed pattern) | The short tool-call turn is half the calls in the mean; making it longer and predictable lifts it | **Promising, not proven** | +9.2% [−0.8%, +20.1%], 420 vs 398 tok/s |
+| Pin to exactly 2 calls (no `web_fetch`) | Fewer short, slow calls in the mean | **Inconclusive, then invalid** | +6.2% [−3.5%, +16.8%] first time; on re-judge it invented a link (not in any search result), which the judge rejects |
+| Copy 8–10 candidates into a template while reasoning | Copied text is easy for a draft model to predict | **Invalid** | The answer listed 10 links and most weren't product pages |
+| Temperature 0 | Speculative decoding accepts more drafted tokens when greedy | _being judged_ | |
+| Copy result titles/prices verbatim in the answer | Same as above | _being judged_ | |
+
+What this says so far:
+
+- **Decode speed is mostly the platform's, not yours.** Per-call rate swings ±25% with shared load,
+  and nothing we changed moved the mean by more than ~10%. Measure over many runs before believing a
+  win.
+- **The mean is over calls, so short calls hurt.** A tool-call turn of a few dozen tokens decodes
+  slower per token than a long answer. Fewer, longer calls is the one direction that keeps showing up.
+- **Speed tricks can break correctness.** Banning page fetches and forcing long candidate lists both
+  led to invented or wrong links. A speed harness needs a correctness gate the agent can't touch.
 
 ## Recommendations
 
