@@ -6,74 +6,65 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 
 **1/** (attach `public.mp4`). This is the official submission post, so it carries every required field.
 
-> 🎅⚡ Speedy Shopper: an OpenClaw agent on Kimi K3.1 Pro that finds 5 real Christmas gifts with live product links in seconds. On @Cerebras it decodes 9.6× faster than on Moonshot's own API.
+> Speedy Shopper 🎅 is an OpenClaw agent on Kimi K3.1 Pro that finds five real Christmas gifts with working links in seconds. On @Cerebras it decodes about 9.6x faster than on Moonshot's own API.
 >
 > Team: @paulobrien
 > GitHub: https://github.com/paulobrien/kimi-speedy-shopper
 >
-> @Kimi_Moonshot #KimiOnCerebras 🧵
+> @Kimi_Moonshot #KimiOnCerebras
 
 **2/**
 
-> Then we tried something different 🧪
->
-> Overnight, Thermite autoresearch (huge thanks @iamMrDuncan 🙏) hill-climbed it: AI workers rewrote its prompt and settings while a judge they can't touch re-ran every idea. Only faster changes with every link still real survived.
+> The part I'm most pleased with: I didn't hand-tune it. Thermite (thanks @iamMrDuncan!) ran an autoresearch loop overnight. AI workers rewrote the prompt and settings, and a separate judge re-ran every change. Faster wasn't enough, though. Every link still had to be real.
 
 **3/** (attach the image)
 
-> 18 hours. 857 shopper runs. 4,000+ links checked.
+> By morning it had run the shopper 857 times and checked 4,000+ links. One change held up: a single long, templated search, about 8% faster.
 >
-> Winner: one long templated search, +7.7% decode speed over 18 paired runs ⚡
-> Busted: temperature 0 (slower), extra reasoning (no gain), two "speed tricks" caught inventing links 🚫
+> Temperature 0 was slower, extra reasoning did nothing, and two shortcuts got caught inventing links.
 >
-> Code + speed guide 👉 https://github.com/paulobrien/kimi-speedy-shopper
+> Write-up: https://github.com/paulobrien/kimi-speedy-shopper
 
 ## Reddit r/cerebras (flair "Kimi K3.1 Pro Hackathon")
 
-**Title:** I let an autoresearch loop tune my Kimi K3.1 Pro shopping agent overnight: 857 runs, 4,000+ verified links, one real speed win
+**Title:** I let an autoresearch loop tune my Kimi K3.1 Pro shopping agent overnight
 
 - **Project name:** Speedy Shopper
 - **Team members:** u/paulobrien
-- **Description:** Speedy Shopper is an OpenClaw agent on Kimi K3.1 Pro on Cerebras that finds five real Christmas gifts with working product links in seconds, decoding 9.6× faster than the same model on Moonshot's own API. Instead of hand-tuning it, I pointed Thermite, an open-source autoresearch system, at it overnight: AI workers rewrote its prompt and settings while a judge they couldn't touch re-ran it 857 times on random gift briefs. A change only survived if it decoded faster *and* every link was still a real, live product page. The winner was one long, templated search call (+7.7% decode speed over 18 paired runs), while temperature 0, extra reasoning and two link-inventing "speed tricks" were all rejected.
+- **Description:** Speedy Shopper is an OpenClaw agent on Kimi K3.1 Pro on Cerebras that finds five real Christmas gifts with working product links in seconds, and decodes about 9.6x faster than the same model on Moonshot's own API. Rather than hand-tune it, I pointed Thermite (open-source autoresearch) at it overnight: AI workers rewrote the prompt and settings, and a judge they couldn't touch re-ran the shopper 857 times on random gift requests. A change only stuck if it was faster and every link was still a real, live product page. One did (a single long, templated search, about 8% faster over 18 paired runs), while temperature 0, extra reasoning and two link-inventing shortcuts all got thrown out.
 - **GitHub:** https://github.com/paulobrien/kimi-speedy-shopper
 - **Demo video:** upload `public.mp4` directly (or paste a YouTube link)
 
 ## LinkedIn post (attach `runs/video/linkedin.png`)
 
-> After the success in the first Cerebras hackathon, I figured I'd give this weekend's one a go too! 🎅⚡
+> After the success in the first Cerebras hackathon, I figured I'd give this weekend's one a go too!
 >
-> Meet **Speedy Shopper**: an AI agent that finds five real Christmas gifts, with working product links, in seconds. It runs on Kimi K3.1 Pro on Cerebras inside OpenClaw, and on Cerebras it decoded **9.6× faster** than the same model on Moonshot's own API. Every link gets opened by a verifier, so there are no made-up gifts.
+> The challenge was festive: build an agent that finds five real Christmas gifts, with working product links, as fast as possible. Mine is called Speedy Shopper. It runs Kimi K3.1 Pro on Cerebras inside OpenClaw, and it decodes about 9.6x faster there than the same model does on Moonshot's own API. A verifier opens every link it returns, so there are no made-up gifts.
 >
-> But this time I wanted to try something a bit different. Instead of hand-tuning the agent, I handed it to **Thermite**, an open-source autoresearch tool, and let it hill-climb overnight. AI workers proposed and wrote changes to the shopper's instructions and settings; an independent judge, which they couldn't touch, re-ran the shopper on random gift requests and only accepted a change if it was faster *and* every gift was still a real, live product page.
+> This time I wanted to try something a bit different. Instead of tuning the agent by hand, I gave it to Thermite, an open-source autoresearch tool, and let it hill-climb overnight. AI workers proposed changes to the shopper's instructions and settings. A separate judge, which they had no way to influence, re-ran the shopper on random gift requests and only kept a change if it was faster and every gift was still a real, live product.
 >
-> By morning: **18 hours, 857 shopper runs and 4,000+ links opened and checked.**
+> By the morning it had run the shopper 857 times and checked over 4,000 links. Only one idea survived: asking for one long, templated search instead of several short ones, which made it about 8% faster across 18 paired runs. Temperature 0 made it slower, extra reasoning made no difference, and two "speed tricks" were caught inventing links and thrown out.
 >
-> What survived, and what didn't:
-> ✅ One long, templated search instead of a few short ones: **+7.7% decode speed** over 18 paired runs
-> ❌ Temperature 0: slower, not faster
-> ❌ More reasoning: no measurable effect
-> 🚫 Two "speed tricks" were caught inventing or picking wrong links, and rejected
+> It might look like trivial festive fun, but the ideas underneath apply directly to how we use AI in business:
 >
-> It might look like trivial festive fun, but the ideas underneath apply directly to how we put AI to work in business:
+> - Hill-climbing works for accuracy, not just speed. Swap "tokens per second" for "correct answers on a held-out test set" and the same loop can tune a support assistant, a document-extraction pipeline or a coding agent overnight.
+> - Keep whatever is making the changes away from whatever is scoring them. That separation is the difference between real improvement and an AI quietly gaming its own metric.
+> - Check outputs against the real world. The link checks are what caught the shortcuts that invented results. Any agent that cites sources, updates records or takes actions needs an independent check like that before anything reaches a customer.
+> - Measure with repeats, not anecdotes. Individual runs varied by around 25%, and only paired runs on random inputs separated real gains from noise. The same applies when comparing models, prompts or vendors.
+> - Where you run a model matters as much as which model you pick, especially for real-time and agentic work.
+> - Test the common advice on your own workload. Here, "use temperature 0" made things slower and "add more reasoning" did nothing.
 >
-> 🎯 **Hill-climb for accuracy, not just speed.** Swap "tokens per second" for "correct answers on a held-out test set" and the same loop tunes the prompts, settings and tool use of a support assistant, a document-extraction pipeline or a coding agent, overnight, while the team sleeps.
-> 🔒 **Keep the optimiser away from the judge.** The agents proposing changes could never touch the scoring. That separation is the difference between genuine improvement and an AI quietly gaming its own metric.
-> ✅ **Verify against the real world.** Every link was re-opened and checked, and that's what caught the "speed tricks" that invented results. Any agent that cites sources, updates records or takes actions needs an independent check like this before anything reaches a customer.
-> 📏 **Measure with repeats, not anecdotes.** Individual runs swung by ±25%; only paired runs on random inputs separated real gains from noise. The same discipline applies when comparing models, prompts or vendors.
-> ⚖️ **Benchmark the platform, not just the model.** The same model decoded 9.6× faster on Cerebras. For real-time and agentic workloads, where you run it matters as much as which model you pick.
-> 🧪 **Test the folklore on your own workload.** "Use temperature 0" and "add more reasoning" are common advice; here, one made things slower and the other did nothing.
+> The code and a full write-up are on GitHub: https://github.com/paulobrien/kimi-speedy-shopper
 >
-> The code and a full speed guide are open source: https://github.com/paulobrien/kimi-speedy-shopper
+> Thanks to Cerebras and Moonshot AI for another great weekend.
 >
-> Thanks to Cerebras and Moonshot AI for another brilliant weekend!
->
-> #AI #Agents #Cerebras #KimiOnCerebras #OpenSource #Autoresearch
+> #AI #Agents #Cerebras #KimiOnCerebras #OpenSource
 
 ## Speed Bounty (Discord #share-your-demo)
 
-> Speed Bounty entry: 504 TPS 🎅⚡
+> Speed Bounty entry: 504 TPS
 >
-> Santa's Speedy Shopper: OpenClaw + Kimi K3.1 Pro on Cerebras, patched web chat. Five real gifts, five live product links (all re-opened and verified), and the mean tok/s readout on screen. The shopper's prompt was tuned for exactly this metric by an overnight Thermite hill climb: 857 judged runs, and only changes that were faster AND kept every link real survived. Repo: https://github.com/paulobrien/kimi-speedy-shopper
+> Santa's Speedy Shopper, running OpenClaw and Kimi K3.1 Pro on Cerebras in the patched web chat. The video shows the TPS readout and the five products with their links, all re-checked as live product pages. The prompt was tuned for this metric by an overnight Thermite hill climb (857 judged runs, and a change only stuck if it was faster and every link stayed real). Repo: https://github.com/paulobrien/kimi-speedy-shopper
 
 ## What's in the videos
 
