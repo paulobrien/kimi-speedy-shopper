@@ -34,7 +34,7 @@ What we measured on our key (Sat 18:40 GMT): per-call TPS is noisy (≈270–470
 
 - Campaign `speedy-shopper-2` ran Sat 19:22 → Sun 13:25 GMT: 429 judge calls, 857 shopper runs, 6 ideas judged. Verdicts and lessons are in [SPEED_GUIDE.md](SPEED_GUIDE.md).
 - Adopted: one long templated search call, +7.7% [+0.4%, +15.0%] pooled over two judgements (each alone inconclusive, so Thermite didn't promote it).
-- Speed Bounty take (patched web chat): 483 tok/s mean, 587 p90, 5/5 links verified. Public demo race: Cerebras 285 vs Moonshot API 30 tok/s (9.6×).
+- Speed Bounty entry (patched web chat): 504 tok/s mean, 584 p90, 5/5 links verified (a live-recorded take reached 483). Public demo race: Cerebras 285 vs Moonshot API 30 tok/s (9.6×).
 - Infrastructure lessons: Cerebras queueing (up to ~4 min per call) and brief search-MCP outages caused false failures overnight; the bench now retries those instead of scoring them.
 
 ## Timeline

@@ -71,7 +71,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 
 ## Speed Bounty (Discord #share-your-demo)
 
-> Speed Bounty entry: 483 TPS 🎅⚡
+> Speed Bounty entry: 504 TPS 🎅⚡
 >
 > Santa's Speedy Shopper: OpenClaw + Kimi K3.1 Pro on Cerebras, patched web chat. Five real gifts, five live product links (all re-opened and verified), and the mean tok/s readout on screen. The shopper's prompt was tuned for exactly this metric by an overnight Thermite hill climb: 857 judged runs, and only changes that were faster AND kept every link real survived. Repo: https://github.com/paulobrien/kimi-speedy-shopper
 
@@ -88,4 +88,4 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 | 49–55 s | Thermite verdicts chart with 95% intervals |
 | 55–58 s | End card: repo link and tags |
 
-**Speed Bounty** (37 s, patched OpenClaw web chat, Discord only): a "cat owner" run with the patch's readout, 483 tok/s mean · 587 p90 (server), then a card listing the five links, all verified live.
+**Speed Bounty** (15 s, patched OpenClaw web chat, Discord only): our top run, "a dad who likes cooking and barbecue" (Sun ~13:30 GMT, worked for 11 s), with the patch's readout 504 tok/s mean · 584 p90 (server) and the five products with links, then a card showing all five re-verified live. A live-recorded take at 483 tok/s (5/5) is kept as `bounty483.mp4`.

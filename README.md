@@ -207,8 +207,8 @@ Overnight campaign `speedy-shopper-2`, Sat 19:22 → Sun ~13:25 GMT. Full verdic
 | Starting point (seed), Thermite baseline | 9 valid of 9 | 382–514, mostly 443–475 | 2 model calls per attempt (search, then answer) |
 | Seed on the patched OpenClaw web chat | 1 | 484 mean, 493 p90 (server) | 5/5 links verified live |
 | Templated 10-query search (adopted, now in `shopper/`) | 18 paired vs 18 seed | 420–435 vs 398–401 (same windows) | +7.7% [+0.4%, +15.0%] pooled over two Thermite judgements; each alone was inconclusive, so Thermite didn't promote it |
-| Patched web chat with adopted prompt (Sun 13:30 GMT) | 2 | 388 mean / 445 p90 (cat owner); 504 mean / 584 p90 (BBQ dad) | 5/5 links verified live both times; single sessions swing with Cerebras load |
-| **Speed Bounty entry** (patched web chat, recorded Sun ~15:20 GMT) | 1 | **483 mean / 587 p90** (cat owner) | 5/5 links verified live; the take we submitted |
+| Patched web chat with adopted prompt (Sun 13:30 GMT) | 2 | 388 mean / 445 p90 (cat owner); **504 mean / 584 p90** (BBQ dad) | 5/5 links verified live both times; the 504 run is our Speed Bounty entry |
+| Live-recorded patched take (Sun ~15:20 GMT) | 1 | 483 mean / 587 p90 (cat owner) | 5/5 links verified live |
 | Public demo run (standard OpenClaw, Sun ~15:30 GMT) | 1 | 427 mean over 4 calls (home barista), from our proxy | 5/5 links verified live |
 
 **Kimi K3.1 Pro decode speed by provider** (Sat 21 Nov, ~20:00 GMT; 600 output tokens at reasoning_effort low, client-side tokens/sec after the first token, one sample each via OpenRouter; Cerebras from our own runs the same evening):
