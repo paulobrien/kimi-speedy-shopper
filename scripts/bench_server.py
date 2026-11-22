@@ -70,6 +70,15 @@ def check_settings(raw):
     return s
 
 
+INFRA = ("No callable tools remain", "no registered", "ECONNRESET", "gateway closed")
+
+
+def infra_failure(a):
+    """A run that never reached the model because the harness or a tool server failed."""
+    rs = " ".join(a.get("reasons", []))
+    return a.get("calls", 0) == 0 and "openclaw run failed" in rs and any(m in rs for m in INFRA)
+
+
 def run_bench(req, args):
     files = req.get("files") or {}
     if "AGENTS.md" not in files or "settings.json" not in files:
@@ -90,7 +99,12 @@ def run_bench(req, args):
         attempts = []
         with LOCK:  # one attempt at a time: the proxy log is attributed by position
             for brief in picks:
-                attempts.append(shopper_bench.attempt(cand, brief, ns))
+                for _ in range(3):  # infra hiccups (MCP didn't register, harness crash) aren't the candidate's fault
+                    a = shopper_bench.attempt(cand, brief, ns)
+                    if not infra_failure(a):
+                        break
+                    time.sleep(20)
+                attempts.append(a)
     valid = [a for a in attempts if a["valid"]]
     tps = [a["mean_tps"] for a in valid]
     return {
