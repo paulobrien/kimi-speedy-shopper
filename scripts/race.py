@@ -167,7 +167,7 @@ def main():
     p.add_argument("--reasoning-effort", default="low")
     p.add_argument("--gpu-provider", help='race another OpenRouter provider instead of "Moonshot AI", e.g. Nebius')
     p.add_argument("--live", action="store_true", help="draw as tokens arrive instead of replaying")
-    p.add_argument("--json", metavar="FILE", help="also save both streams' timings here")
+    p.add_argument("--json", metavar="FILE", help="also save both streams (timings and text, for replaying on video) here")
     a = p.parse_args()
     if a.gpu_provider:
         SIDES["gpu"]["extra"] = {"provider": {"only": [a.gpu_provider], "allow_fallbacks": False}}
@@ -205,8 +205,9 @@ def main():
         if s.error:
             print(f"{s.cfg['label']}: {s.error}")
     if a.json:
-        json.dump({s.name: {"wait_s": s.wait_s, "decode_s": s.decode_s(), "tokens": s.tokens, "tps": s.tps(),
-                            "server_time_info": s.time_info, "provider": s.provider} for s in streams},
+        json.dump({s.name: {"label": s.cfg["label"], "wait_s": s.wait_s, "decode_s": s.decode_s(), "tokens": s.tokens,
+                            "tps": s.tps(), "server_time_info": s.time_info, "provider": s.provider,
+                            "error": s.error, "events": s.events} for s in streams},
                   open(a.json, "w"), indent=2)
 
 
