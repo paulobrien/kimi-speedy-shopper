@@ -33,7 +33,7 @@ tok/s. "Inconclusive" means the interval still includes zero.
 | Longer, templated search call (10 queries, one fixed pattern) | The short tool-call turn is half the calls in the mean; making it longer and predictable lifts it | **Promising, not proven** | +9.2% [−0.8%, +20.1%], 420 vs 398 tok/s |
 | Pin to exactly 2 calls (no `web_fetch`) | Fewer short, slow calls in the mean | **Inconclusive, then invalid** | +6.2% [−3.5%, +16.8%] first time; on re-judge it invented a link (not in any search result), which the judge rejects |
 | Copy 8–10 candidates into a template while reasoning | Copied text is easy for a draft model to predict | **Invalid** | The answer listed 10 links and most weren't product pages |
-| Temperature 0 | Speculative decoding accepts more drafted tokens when greedy | _being judged_ | |
+| Temperature 0 | Speculative decoding accepts more drafted tokens when greedy | **Likely slower** | −9.0% [−17.2%, +0.2%]: keep the default temperature 1.0 |
 | Copy result titles/prices verbatim in the answer | Same as above | _being judged_ | |
 
 What this says so far:
