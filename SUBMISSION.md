@@ -4,13 +4,14 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 
 ## X post (required): post as a thread
 
-**1/** (attach the public video)
+**1/** (attach `public.mp4`). This is the official submission post, so it carries every required field.
 
-> 🎅⚡ Meet Speedy Shopper: an OpenClaw agent on Kimi K3.1 Pro that finds 5 REAL Christmas gifts, with live product links, in seconds.
+> 🎅⚡ Speedy Shopper: an OpenClaw agent on Kimi K3.1 Pro that finds 5 real Christmas gifts with live product links in seconds. On @Cerebras it decodes 9.6× faster than on Moonshot's own API.
 >
-> On @Cerebras it decoded 9.6× faster than the same model on Moonshot's own API.
+> Team: @paulobrien
+> GitHub: https://github.com/paulobrien/kimi-speedy-shopper
 >
-> @Kimi_Moonshot #KimiOnCerebras 🧵👇
+> @Kimi_Moonshot #KimiOnCerebras 🧵
 
 **2/**
 
@@ -33,9 +34,9 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 
 - **Project name:** Speedy Shopper
 - **Team members:** u/paulobrien
-- **Description:** Speedy Shopper is an OpenClaw agent on Kimi K3.1 Pro on Cerebras that finds five real Christmas gifts with working product links in seconds, and a verifier opens every link to prove it's a live product page. On Cerebras it decoded 9.6× faster than the same model on Moonshot's own API. Then I did something a bit different: instead of hand-tuning, I pointed Thermite (open-source autoresearch) at the agent overnight. Its AI workers rewrote the shopper's prompt and settings, and a judge they couldn't touch re-ran the shopper 857 times on random gift briefs, keeping a change only if it decoded faster *and* every link was still real. The winner: one long, templated search call, +7.7% decode speed over 18 paired runs. Temperature 0 was slower, more reasoning did nothing, and two "speed tricks" were caught inventing links. Everything's measured, and it's all in the repo's speed guide.
+- **Description:** Speedy Shopper is an OpenClaw agent on Kimi K3.1 Pro on Cerebras that finds five real Christmas gifts with working product links in seconds, decoding 9.6× faster than the same model on Moonshot's own API. Instead of hand-tuning it, I pointed Thermite, an open-source autoresearch system, at it overnight: AI workers rewrote its prompt and settings while a judge they couldn't touch re-ran it 857 times on random gift briefs. A change only survived if it decoded faster *and* every link was still a real, live product page. The winner was one long, templated search call (+7.7% decode speed over 18 paired runs), while temperature 0, extra reasoning and two link-inventing "speed tricks" were all rejected.
 - **GitHub:** https://github.com/paulobrien/kimi-speedy-shopper
-- **Demo video:** <upload or YouTube link>
+- **Demo video:** upload `public.mp4` directly (or paste a YouTube link)
 
 ## LinkedIn post (attach `runs/video/linkedin.png`)
 
