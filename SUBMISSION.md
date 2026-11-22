@@ -16,7 +16,7 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 
 > Then we tried something different 🧪
 >
-> Overnight, Thermite autoresearch (huge thanks @iamMrDuncan 🙏) hill-climbed it: AI workers rewrote its prompt and settings while a judge they can't touch re-ran every idea on random gift requests. Only faster changes that kept every link real survived.
+> Overnight, Thermite autoresearch (huge thanks @iamMrDuncan 🙏) hill-climbed it: AI workers rewrote its prompt and settings while a judge they can't touch re-ran every idea on random gifts. Only faster changes that kept every link real survived.
 
 **3/** (attach the image)
 
