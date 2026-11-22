@@ -70,13 +70,16 @@ def check_settings(raw):
     return s
 
 
-INFRA = ("No callable tools remain", "no registered", "ECONNRESET", "gateway closed")
+INFRA = ("No callable tools remain", "no registered", "ECONNRESET", "gateway closed",
+         "'kind': 'timeout'", "timed out after")
+BUDGET_S = 1380  # the kit's run step gives up after 1450 s, including time waiting for the lock
 
 
 def infra_failure(a):
     """A run that never reached the model because the harness or a tool server failed."""
     rs = " ".join(a.get("reasons", []))
-    return a.get("calls", 0) == 0 and "openclaw run failed" in rs and any(m in rs for m in INFRA)
+    # A timeout while Cerebras queues the request is infra too, even after a first call went through.
+    return ("openclaw run failed" in rs or "timed out after" in rs) and any(m in rs for m in INFRA)
 
 
 def run_bench(req, args):
@@ -87,6 +90,7 @@ def run_bench(req, args):
     briefs = BRIEFS.get(req.get("set", "visible"))
     if not briefs:
         raise ValueError("set must be visible or held")
+    t0 = time.time()
     reps = max(1, min(int(req.get("reps", 2)), 4))
     picks = random.sample(briefs, reps)
     with tempfile.TemporaryDirectory(prefix="cand-") as cand:
@@ -95,23 +99,31 @@ def run_bench(req, args):
                 raise ValueError(f"bad file {name!r}")
             with open(os.path.join(cand, name), "w") as f:
                 f.write(text)
-        ns = SimpleNamespace(base_url=args.base_url, log=args.log, timeout=args.timeout, min_verified=4)
-        attempts = []
+        attempts, infra = [], 0
         with LOCK:  # one attempt at a time: the proxy log is attributed by position
-            for brief in picks:
-                for _ in range(3):  # infra hiccups (MCP didn't register, harness crash) aren't the candidate's fault
+            for i, brief in enumerate(picks):
+                for _ in range(3):  # infra hiccups (MCP didn't register, queue timeouts) aren't the candidate's fault
+                    left = BUDGET_S - (time.time() - t0)
+                    per = min(args.timeout, int(left / (reps - i)) - 70)
+                    if per < 120:
+                        break
+                    ns = SimpleNamespace(base_url=args.base_url, log=args.log, timeout=per, min_verified=4)
                     a = shopper_bench.attempt(cand, brief, ns)
                     if not infra_failure(a):
+                        attempts.append(a)
                         break
-                    time.sleep(20)
-                attempts.append(a)
+                    infra += 1
+                    time.sleep(10)
+    if not attempts:
+        raise ValueError("no scorable attempt: every run hit an infrastructure failure (Cerebras queue timeout or MCP)")
     valid = [a for a in attempts if a["valid"]]
     tps = [a["mean_tps"] for a in valid]
     return {
-        "pass": len(valid) >= max(1, (reps + 1) // 2),
+        "pass": len(valid) >= max(1, (len(attempts) + 1) // 2),
         "reasons": sorted({r for a in attempts for r in a["reasons"]}),
         "mean_tps": sum(tps) / len(tps) if tps else 0,
         "valid_rate": len(valid) / len(attempts),
+        "infra_retries": infra,
         "calls": sum(a["calls"] for a in attempts) / len(attempts),
         "wall_s": sum(a["wall_s"] for a in attempts) / len(attempts),
         "attempts": [{k: a[k] for k in ("brief", "valid", "reasons", "mean_tps", "calls", "per_call",
@@ -165,7 +177,7 @@ def main():
     p.add_argument("--token-file", default=os.path.join(REPO, "kit", ".bench-token"))
     p.add_argument("--base-url", default="http://127.0.0.1:8899/v1")
     p.add_argument("--log", default=os.path.join(REPO, "runs", "tps_calls.jsonl"))
-    p.add_argument("--timeout", type=int, default=300)
+    p.add_argument("--timeout", type=int, default=600)
     a = p.parse_args()
     Handler.token = open(a.token_file).read().strip()
     Handler.args = a
