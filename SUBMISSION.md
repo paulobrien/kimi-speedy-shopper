@@ -74,15 +74,17 @@ Deadline: **Sun 22 Nov 2026, 10:00 PT (18:00 GMT)**. Fill in the links and numbe
 >
 > Santa's Speedy Shopper: OpenClaw + Kimi K3.1 Pro on Cerebras, patched web chat. Five real gifts, five live product links (all re-opened and verified), and the mean tok/s readout on screen. The shopper's prompt was tuned for exactly this metric by an overnight Thermite hill climb: 857 judged runs, and only changes that were faster AND kept every link real survived. Repo: https://github.com/paulobrien/kimi-speedy-shopper
 
-## Video shot list (≤ 60 s, standard OpenClaw)
+## What's in the videos
+
+**Public demo** (58 s, standard OpenClaw, 1080p, no audio):
 
 | Time | Shot |
 | --- | --- |
-| 0–3 s | Title card: "Speedy Shopper: Kimi K3.1 Pro on Cerebras + OpenClaw" |
-| 3–18 s | OpenClaw web chat, Speedy Shopper agent: type "Find five Christmas gifts for a cat owner". Five gifts with links appear. Show the timer and tok/s from `tps_proxy.py --summary runs/gateway_calls.jsonl` |
-| 18–25 s | Terminal: `verify_gifts.py` ticks all five links green (live product pages) |
-| 25–35 s | `scripts/race.py`: the same prompt on Kimi K3.1 Pro on Cerebras vs Moonshot AI's own API, clocks from first token; Cerebras finishes while Moonshot is still streaming (~8–13× decode speed) |
-| 35–50 s | Thermite dashboard: the speedy-shopper campaign's champion chart climbing; mission control in chat answering "How's the speed run going?" |
-| 50–60 s | End card: ~450 tok/s, +8% from the overnight hill climb, ~8× Moonshot's API; repo link, #KimiOnCerebras |
+| 0–3 s | Title card |
+| 3–27 s | Standard OpenClaw web chat: "Find five Christmas gifts for a home barista on a budget". The Cerebras queue wait is fast-forwarded with an on-screen label (queue time isn't counted in TPS); the agent's work plays in real time. |
+| 27–32 s | That run, measured: 427 tok/s mean over 4 calls (server-side, from our proxy), 5/5 links re-opened and verified |
+| 32–49 s | `race.py` replay: same prompt on Cerebras vs Moonshot AI's own API, clocks from first token: 285 vs 30 tok/s, 9.6× |
+| 49–55 s | Thermite verdicts chart with 95% intervals |
+| 55–58 s | End card: repo link and tags |
 
-Before recording: pause the Thermite run so it doesn't share the token budget, hide notifications and keys, and use a fresh chat session.
+**Speed Bounty** (37 s, patched OpenClaw web chat, Discord only): a "cat owner" run with the patch's readout, 483 tok/s mean · 587 p90 (server), then a card listing the five links, all verified live.

@@ -44,7 +44,7 @@ flowchart LR
 
 - **Shopper** ([shopper/](shopper/)): its instructions (`AGENTS.md`) and request settings (`settings.json`). Its only tools are Parallel's `web_search` and `web_fetch`, reached through Parallel's free search MCP endpoint (no key). It answers with exactly five lines: `N. Product — price — retailer — link`.
 - **Bench** ([scripts/shopper_bench.py](scripts/shopper_bench.py)): runs one shopper attempt headlessly with `openclaw agent exec --config config/shopper.json5`, through the TPS proxy, then scores and verifies it.
-- **Thermite kit** ([kit/](kit/)) and contract ([thermite/contract.json](thermite/contract.json)): the hill climb. The judge runs inside Thermite's rig container and posts each candidate's `shopper/` files to the bench service on the host. It scores the mean TPS of two attempts on random briefs, three times per cell, and keeps only consistent wins. Held-out briefs check that a win isn't tuned to particular searches.
+- **Thermite kit** ([kit/](kit/)) and contract ([thermite/contract.json](thermite/contract.json)): the hill climb. The judge runs inside Thermite's rig container and posts each candidate's `shopper/` files to the bench service on the host. Each judgement runs the candidate and the current champion on random briefs, paired (9 runs a side per verdict), and keeps a change only if the gain is clear of the noise. Held-out briefs check that a win isn't tuned to particular searches.
 - **Mission control** ([agent/](agent/)): an OpenClaw agent whose only tools are 12 Thermite MCP tools.
 
 ## How speed is measured
@@ -64,7 +64,7 @@ What we saw on day one: identical requests decode at roughly 270–560 tokens/se
 The bounty disqualifies made-up, placeholder or hard-coded results. The bench treats an attempt as **valid** only if all of these hold:
 
 1. The answer has exactly five distinct URLs.
-2. Each URL is a live product page on a retail site, on at least two retailers. [scripts/verify_gifts.py](scripts/verify_gifts.py) fetches each one and looks for schema.org `Product` data, `og:type product`, price metadata, or a price beside an add-to-basket button. Shops that block scripts (403/429) are re-checked through Parallel's page fetcher. Big retailers that block both are accepted only when that run's own search result for the URL shows a price and a buy signal.
+2. Each URL is a live product page on a retail site, on at least two retailers. [scripts/verify_gifts.py](scripts/verify_gifts.py) fetches each one and looks for schema.org `Product` data, `og:type product`, price metadata, or a price beside a buy signal (add to basket, regular/sale price, stock, quantity). Shops that block scripts (403/429) are re-checked through Parallel's page fetcher. Big retailers that block both are accepted only when that run's own search result for the URL shows a price and a buy signal.
 3. Every URL appeared in a tool result during that attempt. The proxy saves request bodies, so the bench can see exactly what the model was shown.
 4. No URL is written in the candidate's own files. The contract also forbids URL patterns in `shopper/`.
 
@@ -79,13 +79,13 @@ Thermite only measures speed on valid runs.
 | Speed bounty task: five real Christmas gifts, with links | The shopper, checked by `verify_gifts.py` |
 | TPS measured with the official patch | The bounty recording uses the patched OpenClaw in a separate checkout (not in this repo). Our proxy reproduces its formula for tuning |
 | Public demo on standard OpenClaw | This repo's setup uses the stock `openclaw` npm package |
-| Demo ≤ 60 s showing Cerebras speed | `scripts/record.sh` caps at 60 s |
+| Demo ≤ 60 s showing Cerebras speed | 58 s cut: a live shopper run, its measured TPS and verified links, `race.py` vs Moonshot's API, and the hill-climb results |
 
 ## Repository layout
 
 ```
 .
-├── README.md, PLAN.md
+├── README.md, PLAN.md, SPEED_GUIDE.md, SUBMISSION.md
 ├── shopper/                      the shopper agent's workspace (AGENTS.md, settings.json, tiny persona files)
 ├── agent/                        the mission-control agent's workspace
 ├── config/
@@ -207,7 +207,9 @@ Overnight campaign `speedy-shopper-2`, Sat 19:22 → Sun ~13:25 GMT. Full verdic
 | Starting point (seed), Thermite baseline | 9 valid of 9 | 382–514, mostly 443–475 | 2 model calls per attempt (search, then answer) |
 | Seed on the patched OpenClaw web chat | 1 | 484 mean, 493 p90 (server) | 5/5 links verified live |
 | Templated 10-query search (adopted, now in `shopper/`) | 18 paired vs 18 seed | 420–435 vs 398–401 (same windows) | +7.7% [+0.4%, +15.0%] pooled over two Thermite judgements; each alone was inconclusive, so Thermite didn't promote it |
-| Patched web chat with adopted prompt (Sun 13:30 GMT) | 2 | 388 mean / 445 p90 (cat owner); **504 mean / 584 p90** (BBQ dad) | 5/5 links verified live both times; single sessions swing with Cerebras load |
+| Patched web chat with adopted prompt (Sun 13:30 GMT) | 2 | 388 mean / 445 p90 (cat owner); 504 mean / 584 p90 (BBQ dad) | 5/5 links verified live both times; single sessions swing with Cerebras load |
+| **Speed Bounty entry** (patched web chat, recorded Sun ~15:20 GMT) | 1 | **483 mean / 587 p90** (cat owner) | 5/5 links verified live; the take we submitted |
+| Public demo run (standard OpenClaw, Sun ~15:30 GMT) | 1 | 427 mean over 4 calls (home barista), from our proxy | 5/5 links verified live |
 
 **Kimi K3.1 Pro decode speed by provider** (Sat 21 Nov, ~20:00 GMT; 600 output tokens at reasoning_effort low, client-side tokens/sec after the first token, one sample each via OpenRouter; Cerebras from our own runs the same evening):
 
@@ -221,12 +223,12 @@ Overnight campaign `speedy-shopper-2`, Sat 19:22 → Sun ~13:25 GMT. Full verdic
 | Together, Alibaba, Fireworks | 42–49 |
 | Moonshot AI (the model's own API) | 35 |
 
-**Our comparison is Moonshot AI's own API**, the model's creator serving its own model, rather than the fastest or slowest third-party host. `scripts/race.py` runs the same prompt on Cerebras and on Moonshot's API (via OpenRouter, fallbacks off) side by side; `--gpu-provider NAME` races another host. First race (Cerebras under heavy load): Cerebras 269 tok/s vs Moonshot API 34 tok/s, **8× faster decoding**. Both clocks start at each side's first token, because time spent queueing is about load, not inference speed. Queue time is still shown, labelled as excluded.
+**Our comparison is Moonshot AI's own API**, the model's creator serving its own model, rather than the fastest or slowest third-party host. `scripts/race.py` runs the same prompt on Cerebras and on Moonshot's API (via OpenRouter, fallbacks off) side by side; `--gpu-provider NAME` races another host. First race (Sat, Cerebras under heavy load): Cerebras 269 tok/s vs Moonshot API 34 tok/s, 8× faster decoding. The race in the demo video (Sun): Cerebras 285 tok/s vs Moonshot API 30 tok/s, **9.6× faster decoding**. Both clocks start at each side's first token, because time spent queueing is about load, not inference speed. Queue time is still shown, labelled as excluded.
 
 ## Recording and submission
 
 - `scripts/record.sh recordings/demo.mp4 1920x1080+0+0` records a region at 30 fps to 1080p H.264, stopping at 60 s. `recordings/` is gitignored. Hide notifications, keys and e-mail first.
-- **Public demo (X, Reddit):** standard OpenClaw. Show the shopper answering in seconds, the verifier opening all five links, a GPU-served comparison, and Thermite's climb.
+- **Public demo (X, Reddit):** standard OpenClaw. Shows the shopper answering, the verifier's result for all five links, the race against Moonshot's API, and the hill-climb results. Queue waits are fast-forwarded on screen and labelled.
 - **Speed bounty (Discord `#share-your-demo`):** run the shopper in the **patched** OpenClaw web chat (separate checkout). Show the mean tok/s readout and the five links, and write `Speed Bounty entry: N TPS` in the message.
 - X post: project name, team handles, 2–4 sentence description, video, repo link, `@Cerebras @Kimi_Moonshot #KimiOnCerebras`. Reddit r/cerebras with the flair "Kimi K3.1 Pro Hackathon". Deadline **Sun 22 Nov 10:00 PT**.
 

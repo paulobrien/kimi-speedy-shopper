@@ -23,24 +23,25 @@ What we measured on our key (Sat 18:40 GMT): per-call TPS is noisy (≈270–470
 
 ## Parts
 
-1. **Shopper agent** (`agent-shopper/`, OpenClaw agent `shopper`). Its only tools are web search and fetch (Parallel's free search MCP, connected as an MCP server). It's told to output exactly five gifts as `name — price — retailer — URL`.
-2. **TPS meter** (`scripts/tps_proxy.py`). A local pass-through proxy to `api.cerebras.ai`. It logs each call's `completion_tokens` and `completion_time` and reports the same mean/p90 as the patch. OpenClaw's `cerebras-metered` provider points at it.
+1. **Shopper agent** (`shopper/`, OpenClaw agent `shopper`). Its only tools are web search and fetch (Parallel's free search MCP, connected as an MCP server). It's told to output exactly five gifts as `name — price — retailer — URL`.
+2. **TPS meter** (`scripts/tps_proxy.py`). A local pass-through proxy to `api.cerebras.ai`. It logs each call's `completion_tokens` and `completion_time` and reports the same mean/p90 as the patch. The headless bench (and, for the demo, the gateway) point their Cerebras base URL at it.
 3. **Verifier** (`scripts/verify_gifts.py`). Fetches each of the five links: HTTP status, product schema (JSON-LD `Product`/`Offer`) or price, and the page title. It's also shown in the demo, as proof that the links are real.
 4. **Bench service** (`scripts/shopper_bench.py`). Runs one shopper attempt end to end on a candidate configuration: agent prompt plus request settings → OpenClaw run through the proxy → verify → JSON with mean TPS, p90, call count, validity, wall time. It's used both from the CLI and by the Thermite judge (reached from the rig container at `host.docker.internal`).
-5. **Thermite hill climb** (`kit/`). A Thermite kit whose candidate is the shopper configuration (`shopper/AGENTS.md`, `shopper/settings.json`). The judge runs the bench several times with varied gift briefs. Score = median mean-TPS, gated on validity: 5 distinct live product links, all present in that run's tool results, none present in the candidate's files. Thermite's workers stay on the rig's current models; Kimi is central through OpenClaw.
+5. **Thermite hill climb** (`kit/`). A Thermite kit whose candidate is the shopper configuration (`shopper/AGENTS.md`, `shopper/settings.json`). The judge runs the bench several times with varied gift briefs. Score = mean TPS, gated on validity: 5 distinct live product links, all present in that run's tool results, none present in the candidate's files. Thermite's workers stay on the rig's current models; Kimi is central through OpenClaw.
 6. **Mission control** (existing `mission` agent). OpenClaw on Kimi, steering the Thermite campaign through its MCP tools ("how's the speed run going?", "queue another lane"). This is the "guide" half of the demo.
 
-## Status (Sat 19:30 GMT)
+## Outcome (Sun 22 Nov)
 
-- Shopper, proxy, verifier, bench, kit and contract all work. Campaign run `speedy-shopper-2` is measuring its baseline (judged runs so far: 424, 382, 514 mean TPS, all valid).
-- Cerebras is heavily congested (queue times up to ~2.5 min per call; 429 `queue_exceeded`). The proxies retry; it doesn't affect TPS, only throughput.
-- Run 1 and the judge-only try are paused (kit fixes).
+- Campaign `speedy-shopper-2` ran Sat 19:22 → Sun 13:25 GMT: 429 judge calls, 857 shopper runs, 6 ideas judged. Verdicts and lessons are in [SPEED_GUIDE.md](SPEED_GUIDE.md).
+- Adopted: one long templated search call, +7.7% [+0.4%, +15.0%] pooled over two judgements (each alone inconclusive, so Thermite didn't promote it).
+- Speed Bounty take (patched web chat): 483 tok/s mean, 587 p90, 5/5 links verified. Public demo race: Cerebras 285 vs Moonshot API 30 tok/s (9.6×).
+- Infrastructure lessons: Cerebras queueing (up to ~4 min per call) and brief search-MCP outages caused false failures overnight; the bench now retries those instead of scoring them.
 
 ## Timeline
 
 - **Sat evening (GMT):** parts 1–4 working on standard OpenClaw; first valid shopper runs with TPS numbers. Plan, README and commits.
 - **Sat night:** kit + contract, judge-only test, then start the campaign (1–2 lanes; pause it whenever we take bounty measurements).
-- **Sun morning:** take the best configuration. Build the patched OpenClaw in a separate folder (needs the user's OK to download), run the shopper in its web UI, and record the bounty video showing top mean TPS and the 5 links.
+- **Sun morning:** take the best configuration. Build the patched OpenClaw in a separate folder, run the shopper in its web UI, and record the bounty video showing top mean TPS and the 5 links.
 - **Sun midday:** record the public demo on standard OpenClaw (shopper speed, GPU side-by-side, Thermite climb chart). Push the repo, then post to X, Reddit and Discord well before 18:00 GMT.
 
 ## Constraints
@@ -48,9 +49,3 @@ What we measured on our key (Sat 18:40 GMT): per-call TPS is noisy (≈270–470
 - 100 RPM / 100K TPM per participant; **cached prompt tokens don't count**. Keep the agent's prompt prefix stable and small.
 - The speed patch must not be published or committed, and the public demos use standard OpenClaw.
 - Cerebras live support: Sat 10:30–12:30 PT, Sun 9:00–10:00 PT.
-
-## Open items for the user
-
-- OK to download and build the speed patch (separate checkout, outside this repo).
-- Adding Cerebras as a Thermite provider (dashboard sign-in) if we want Thermite's workers on Kimi too. Optional.
-- Handles for the posts; creating the public GitHub repo.

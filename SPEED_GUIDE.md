@@ -34,7 +34,8 @@ tok/s. "Inconclusive" means the interval still includes zero.
 | Pin to exactly 2 calls (no `web_fetch`) | Fewer short, slow calls in the mean | **Inconclusive, then invalid** | +6.2% [−3.5%, +16.8%] first time; on re-judge it invented a link (not in any search result), which the judge rejects |
 | Copy 8–10 candidates into a template while reasoning | Copied text is easy for a draft model to predict | **Invalid** | The answer listed 10 links and most weren't product pages |
 | Temperature 0 | Speculative decoding accepts more drafted tokens when greedy | **Likely slower** | −9.0% [−17.2%, +0.2%]: keep the default temperature 1.0 |
-| Copy result titles/prices verbatim in the answer | Same as above | _being judged_ | |
+| Reasoning off (`thinking: off`) | No reasoning prose to decode | **Rejected** | Not a setting Kimi on Cerebras accepts (`none`/`minimal` are refused), so the bench's settings check turned it away |
+| Copy result titles/prices verbatim in the answer | Same as above | **No verdict** | Its judging was cut short repeatedly by infrastructure failures (a search-MCP outage, Cerebras queue timeouts, a bench restart) before the run's time ran out |
 
 What this says so far:
 
